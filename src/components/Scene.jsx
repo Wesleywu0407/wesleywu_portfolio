@@ -40,6 +40,27 @@ function smoothstep(min, max, value) {
   return x * x * (3 - 2 * x)
 }
 
+function motionPulse(time, start, peak, end) {
+  return smoothstep(start, peak, time) * (1 - smoothstep(peak, end, time))
+}
+
+function idlePerformance(elapsed, zone = 0) {
+  const cycle = (elapsed + zone * 1.85) % 12
+  const agree = motionPulse(cycle, 1.4, 2.15, 3.25) * 0.7
+  const headShake = motionPulse(cycle, 4.8, 5.55, 6.75) * 0.55
+  const sneakPose = motionPulse(cycle, 8.05, 8.9, 10.3) * 0.45
+  const gestureTotal = agree + headShake + sneakPose
+
+  return {
+    idle: Math.max(0, 1 - gestureTotal),
+    walk: 0,
+    run: 0,
+    agree,
+    headShake,
+    sneak_pose: sneakPose,
+  }
+}
+
 function useCharacterStory(layerRef) {
   const story = useRef({
     scrollY: 0,
@@ -52,6 +73,10 @@ function useCharacterStory(layerRef) {
     activeWork: 0,
     hoveredWork: null,
     reducedMotion: false,
+    zone: null,
+    runStartedAt: 0,
+    runUntil: 0,
+    transitionDirection: 1,
   })
 
   useEffect(() => {
@@ -118,6 +143,20 @@ function useCharacterStory(layerRef) {
       }
 
       const heroEnd = current.sections.marquee?.top || current.sections.hero?.bottom || window.innerHeight
+      const aboutStart = (current.sections.about?.top ?? heroEnd * 2) - window.innerHeight * 0.55
+      const journeyStart = (current.sections.journey?.top ?? aboutStart * 2) - window.innerHeight * 0.55
+      const contactStart = (current.sections.contact?.top ?? journeyStart * 2) - window.innerHeight * 0.6
+      const nextZone = y < heroEnd ? 0 : y < aboutStart ? 1 : y < journeyStart ? 2 : y < contactStart ? 3 : 4
+
+      if (current.zone === null) {
+        current.zone = nextZone
+      } else if (nextZone !== current.zone) {
+        current.transitionDirection = Math.sign(nextZone - current.zone) || current.direction
+        current.zone = nextZone
+        current.runStartedAt = now
+        current.runUntil = current.reducedMotion ? now : now + 1150
+      }
+
       if (layerRef.current) layerRef.current.style.zIndex = y > heroEnd * 0.28 ? '2' : '1'
 
       lastY = y
@@ -208,7 +247,7 @@ function Human({ story }) {
 
     if (actions.idle) actions.idle.timeScale = 0.65
     if (actions.walk) actions.walk.timeScale = 0.85
-    if (actions.run) actions.run.timeScale = 0.82
+    if (actions.run) actions.run.timeScale = 1
     if (actions.agree) actions.agree.timeScale = 0.72
     if (actions.headShake) actions.headShake.timeScale = 0.7
     if (actions.sneak_pose) actions.sneak_pose.timeScale = 0.55
@@ -244,6 +283,7 @@ function Human({ story }) {
     const aspect = viewportWidth / Math.max(1, viewportHeight)
     const rail = Math.min(1.38, Math.max(0.92, aspect * 0.78))
     const speed = Math.abs(current.velocity)
+    const now = performance.now()
 
     let targetX = 0
     let targetY = 0
@@ -369,6 +409,33 @@ function Human({ story }) {
         sneak_pose: 0,
       }
     }
+
+    const standingBlend = current.reducedMotion ? 0 : 1 - smoothstep(0.025, 0.24, speed)
+    const idlePose = idlePerformance(state.clock.elapsedTime, current.zone ?? 0)
+    Object.keys(weights).forEach((name) => {
+      weights[name] = mix(weights[name], idlePose[name], standingBlend)
+    })
+
+    const runDuration = Math.max(1, current.runUntil - current.runStartedAt)
+    const runElapsed = now - current.runStartedAt
+    const runBurst = current.reducedMotion || now >= current.runUntil
+      ? 0
+      : smoothstep(0, 140, runElapsed) * (1 - smoothstep(runDuration - 260, runDuration, runElapsed))
+
+    if (runBurst > 0) {
+      Object.keys(weights).forEach((name) => {
+        if (name !== 'run') weights[name] *= 1 - runBurst
+      })
+      weights.run = weights.run + (1 - weights.run) * runBurst
+      targetRotationX += runBurst * 0.08
+      targetRotationZ -= runBurst * current.transitionDirection * 0.035
+      targetY += Math.sin(clamp01(runElapsed / runDuration) * Math.PI) * 0.055
+    }
+
+    const idleEnergy = standingBlend * (1 - runBurst)
+    targetY += Math.sin(state.clock.elapsedTime * 1.25) * 0.012 * idleEnergy
+    targetRotationY += Math.sin(state.clock.elapsedTime * 0.58) * 0.04 * idleEnergy
+    targetRotationZ += Math.sin(state.clock.elapsedTime * 0.82) * 0.012 * idleEnergy
 
     Object.entries(weights).forEach(([name, weight]) => {
       actions[name]?.setEffectiveWeight(current.reducedMotion && name !== 'idle' ? 0 : weight)
