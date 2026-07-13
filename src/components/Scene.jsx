@@ -3,7 +3,6 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import {
   useGLTF,
   useAnimations,
-  ContactShadows,
   Environment,
   Lightformer,
 } from '@react-three/drei'
@@ -28,22 +27,160 @@ function CameraRig() {
 const MODEL_URL =
   'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/models/gltf/Xbot.glb'
 
+function clamp01(value) {
+  return Math.min(1, Math.max(0, value))
+}
+
+function mix(from, to, amount) {
+  return from + (to - from) * amount
+}
+
 function smoothstep(min, max, value) {
-  const x = Math.min(1, Math.max(0, (value - min) / (max - min)))
+  const x = clamp01((value - min) / (max - min))
   return x * x * (3 - 2 * x)
 }
 
-function Human({ scrollProgress, reducedMotion }) {
+function useCharacterStory(layerRef) {
+  const story = useRef({
+    scrollY: 0,
+    velocity: 0,
+    direction: 1,
+    viewportHeight: 1,
+    viewportWidth: 1,
+    sections: {},
+    rows: [],
+    activeWork: 0,
+    hoveredWork: null,
+    reducedMotion: false,
+  })
+
+  useEffect(() => {
+    let frame = 0
+    let lastY = window.scrollY
+    let lastTime = performance.now()
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)')
+
+    const readBox = (selector) => {
+      const element = document.querySelector(selector)
+      if (!element) return null
+      const rect = element.getBoundingClientRect()
+      const top = rect.top + window.scrollY
+      return { top, bottom: top + rect.height, height: rect.height }
+    }
+
+    const measure = () => {
+      const current = story.current
+      current.viewportHeight = window.innerHeight
+      current.viewportWidth = window.innerWidth
+      current.reducedMotion = media.matches
+      current.sections = {
+        hero: readBox('#top'),
+        marquee: readBox('[data-character-zone="marquee"]'),
+        work: readBox('#work'),
+        about: readBox('#about'),
+        journey: readBox('#journey'),
+        contact: readBox('#contact'),
+      }
+      current.rows = Array.from(document.querySelectorAll('.work-row')).map((row) => {
+        const rect = row.getBoundingClientRect()
+        const top = rect.top + window.scrollY
+        return { top, center: top + rect.height / 2 }
+      })
+    }
+
+    const update = () => {
+      frame = 0
+      const now = performance.now()
+      const y = window.scrollY
+      const elapsed = Math.max(16, now - lastTime)
+      const delta = y - lastY
+      const current = story.current
+      const instantVelocity = delta / elapsed
+
+      current.velocity = current.velocity * 0.68 + instantVelocity * 0.32
+      if (Math.abs(delta) > 0.5) current.direction = Math.sign(delta)
+      current.scrollY = y
+      current.viewportHeight = window.innerHeight
+      current.viewportWidth = window.innerWidth
+
+      if (current.rows.length) {
+        const readingLine = y + window.innerHeight * 0.52
+        let closest = 0
+        let distance = Infinity
+        current.rows.forEach((row, index) => {
+          const nextDistance = Math.abs(row.center - readingLine)
+          if (nextDistance < distance) {
+            closest = index
+            distance = nextDistance
+          }
+        })
+        current.activeWork = current.hoveredWork ?? closest
+      }
+
+      const heroEnd = current.sections.marquee?.top || current.sections.hero?.bottom || window.innerHeight
+      if (layerRef.current) layerRef.current.style.zIndex = y > heroEnd * 0.28 ? '2' : '1'
+
+      lastY = y
+      lastTime = now
+    }
+
+    const queueUpdate = () => {
+      if (!frame) frame = requestAnimationFrame(update)
+    }
+
+    const onProjectFocus = (event) => {
+      story.current.hoveredWork = event.detail
+      update()
+    }
+
+    const onMotionPreference = () => {
+      story.current.reducedMotion = media.matches
+    }
+
+    measure()
+    update()
+    document.fonts?.ready.then(() => {
+      measure()
+      update()
+    })
+
+    const resizeObserver = new ResizeObserver(() => {
+      measure()
+      update()
+    })
+    resizeObserver.observe(document.body)
+    window.addEventListener('scroll', queueUpdate, { passive: true })
+    window.addEventListener('resize', measure)
+    window.addEventListener('character-project-focus', onProjectFocus)
+    media.addEventListener('change', onMotionPreference)
+
+    return () => {
+      cancelAnimationFrame(frame)
+      resizeObserver.disconnect()
+      window.removeEventListener('scroll', queueUpdate)
+      window.removeEventListener('resize', measure)
+      window.removeEventListener('character-project-focus', onProjectFocus)
+      media.removeEventListener('change', onMotionPreference)
+    }
+  }, [layerRef])
+
+  return story
+}
+
+function Human({ story }) {
   const group = useRef()
+  const body = useRef()
   const { scene, animations } = useGLTF(MODEL_URL)
   const { actions } = useAnimations(animations, scene)
+  const chromeDay = useMemo(() => new Color('#b9c7dc'), [])
+  const chromeNight = useMemo(() => new Color('#e0ecff'), [])
 
   // Liquid-chrome material: a cool silver base, tight reflections and a subtle
   // blue-violet iridescent shift give the figure a polished Y2K mercury finish.
   const mercury = useMemo(
     () =>
       new MeshPhysicalMaterial({
-        color: new Color('#b9c7dc'),
+        color: chromeDay.clone(),
         metalness: 1,
         roughness: 0.12,
         clearcoat: 1,
@@ -53,13 +190,13 @@ function Human({ scrollProgress, reducedMotion }) {
         iridescenceIOR: 1.45,
         iridescenceThicknessRange: [120, 460],
       }),
-    [],
+    [chromeDay],
   )
 
   useEffect(() => {
     // Run the clips together and blend their weights from scroll progress.
     // This keeps transitions fluid instead of snapping between canned poses.
-    const clips = ['idle', 'walk', 'agree', 'sneak_pose']
+    const clips = ['idle', 'walk', 'run', 'agree', 'headShake', 'sneak_pose']
       .map((name) => actions[name])
       .filter(Boolean)
 
@@ -71,7 +208,9 @@ function Human({ scrollProgress, reducedMotion }) {
 
     if (actions.idle) actions.idle.timeScale = 0.65
     if (actions.walk) actions.walk.timeScale = 0.85
+    if (actions.run) actions.run.timeScale = 0.82
     if (actions.agree) actions.agree.timeScale = 0.72
+    if (actions.headShake) actions.headShake.timeScale = 0.7
     if (actions.sneak_pose) actions.sneak_pose.timeScale = 0.55
 
     scene.traverse((o) => {
@@ -87,114 +226,211 @@ function Human({ scrollProgress, reducedMotion }) {
 
   useEffect(() => () => mercury.dispose(), [mercury])
 
-  // the figure lazily turns to face the cursor
+  // One continuous character performance, choreographed from measured page sections.
   useFrame((state, delta) => {
-    if (!group.current) return
-    const rawProgress = reducedMotion ? 0 : (scrollProgress?.get() ?? 0)
-    const progress = smoothstep(0, 0.58, rawProgress)
-    const follow = Math.min(1, delta * 4)
+    if (!group.current || !body.current) return
+    const current = story.current
+    current.velocity *= Math.exp(-delta * 5)
 
-    const idleOut = smoothstep(0.05, 0.28, progress)
-    const walkOut = smoothstep(0.46, 0.67, progress)
-    const agreeOut = smoothstep(0.72, 0.93, progress)
-    actions.idle?.setEffectiveWeight(1 - idleOut)
-    actions.walk?.setEffectiveWeight(idleOut * (1 - walkOut))
-    actions.agree?.setEffectiveWeight(walkOut * (1 - agreeOut))
-    actions.sneak_pose?.setEffectiveWeight(agreeOut)
+    const { sections } = current
+    const viewportHeight = current.viewportHeight || state.size.height
+    const viewportWidth = current.viewportWidth || state.size.width
+    const y = current.scrollY
+    const heroEnd = sections.marquee?.top || sections.hero?.bottom || viewportHeight
+    const aboutStart = (sections.about?.top ?? heroEnd * 2) - viewportHeight * 0.55
+    const journeyStart = (sections.journey?.top ?? aboutStart * 2) - viewportHeight * 0.55
+    const contactStart = (sections.contact?.top ?? journeyStart * 2) - viewportHeight * 0.6
+    const narrow = viewportWidth < 900
+    const aspect = viewportWidth / Math.max(1, viewportHeight)
+    const rail = Math.min(1.38, Math.max(0.92, aspect * 0.78))
+    const speed = Math.abs(current.velocity)
 
-    const targetY = state.pointer.x * 0.34 + progress * 0.9
-    const targetX = -state.pointer.y * 0.05 + progress * 0.1
-    const targetZ = -Math.sin(progress * Math.PI) * 0.055
-    group.current.rotation.y += (targetY - group.current.rotation.y) * follow
-    group.current.rotation.x += (targetX - group.current.rotation.x) * follow
-    group.current.rotation.z += (targetZ - group.current.rotation.z) * follow
+    let targetX = 0
+    let targetY = 0
+    let targetScale = 1
+    let targetRotationX = 0
+    let targetRotationY = state.pointer.x * 0.3
+    let targetRotationZ = 0
+    let darkStage = 0
+    let weights = { idle: 1, walk: 0, run: 0, agree: 0, headShake: 0, sneak_pose: 0 }
 
-    const targetScale = 1 - progress * 0.14
+    if (narrow) {
+      const progress = clamp01(y / Math.max(1, heroEnd * 0.72))
+      const stride = smoothstep(0.06, 0.42, progress)
+      const exit = smoothstep(0.55, 0.9, progress)
+      targetScale = (1 - progress * 0.12) * (1 - exit)
+      targetY = progress * 0.12
+      targetRotationY += progress * 0.45
+      weights = {
+        idle: 1 - stride,
+        walk: stride,
+        run: 0,
+        agree: 0,
+        headShake: 0,
+        sneak_pose: 0,
+      }
+    } else if (y < heroEnd) {
+      const progress = clamp01(y / Math.max(1, heroEnd))
+      const escape = smoothstep(0.14, 0.92, progress)
+      const stride = smoothstep(0.06, 0.32, progress)
+      const sprint = smoothstep(0.45, 0.72, progress)
+      targetX = mix(0, rail, escape)
+      targetY = mix(0, 0.2, escape)
+      targetScale = mix(1, 0.52, escape)
+      targetRotationX = progress * 0.055
+      targetRotationY += mix(0, -0.42, escape)
+      targetRotationZ = -Math.sin(progress * Math.PI) * 0.04
+      weights = {
+        idle: 1 - stride,
+        walk: stride * (1 - sprint),
+        run: sprint,
+        agree: 0,
+        headShake: 0,
+        sneak_pose: 0,
+      }
+    } else if (y < aboutStart) {
+      const rowCount = Math.max(1, current.rows.length - 1)
+      const rowPhase = current.activeWork / rowCount - 0.5
+      const runWeight = smoothstep(0.85, 1.75, speed)
+      const walkWeight = smoothstep(0.06, 0.5, speed) * (1 - runWeight)
+      const gesture = (1 - walkWeight - runWeight) * (current.activeWork % 2 ? 0.2 : 0)
+      targetX = rail
+      targetY = 0.22 + rowPhase * 0.1
+      targetScale = 0.53
+      targetRotationX = current.direction > 0 ? 0.035 : -0.035
+      targetRotationY = -0.5 + current.direction * 0.045
+      targetRotationZ = rowPhase * 0.035
+      weights = {
+        idle: Math.max(0, 1 - walkWeight - runWeight - gesture),
+        walk: walkWeight,
+        run: runWeight,
+        agree: gesture,
+        headShake: 0,
+        sneak_pose: 0,
+      }
+    } else if (y < journeyStart) {
+      const moving = smoothstep(0.05, 0.55, speed)
+      const agree = (1 - moving) * 0.38
+      targetX = rail
+      targetY = 0.2
+      targetScale = 0.5
+      targetRotationX = 0.025
+      targetRotationY = -0.52
+      darkStage = 1
+      weights = {
+        idle: 1 - moving - agree,
+        walk: moving,
+        run: 0,
+        agree,
+        headShake: 0,
+        sneak_pose: 0,
+      }
+    } else if (y < contactStart) {
+      const crossing = smoothstep(
+        (sections.journey?.top ?? journeyStart) - viewportHeight * 0.75,
+        (sections.journey?.top ?? journeyStart) - viewportHeight * 0.12,
+        y,
+      )
+      const runWeight = smoothstep(0.8, 1.6, speed)
+      const walkWeight = Math.max(smoothstep(0.04, 0.45, speed), 0.22) * (1 - runWeight)
+      targetX = mix(rail, -rail, crossing)
+      targetY = 0.2
+      targetScale = 0.47
+      targetRotationX = current.direction > 0 ? 0.035 : -0.035
+      targetRotationY = mix(-0.5, 0.48, crossing)
+      targetRotationZ = Math.sin(crossing * Math.PI) * 0.055
+      weights = {
+        idle: Math.max(0, 1 - walkWeight - runWeight),
+        walk: walkWeight,
+        run: runWeight,
+        agree: 0,
+        headShake: 0,
+        sneak_pose: 0,
+      }
+    } else {
+      const contact = sections.contact
+      const progress = clamp01(
+        (y - contactStart) / Math.max(1, (contact?.height ?? viewportHeight) + viewportHeight * 0.15),
+      )
+      const approach = smoothstep(0.02, 0.36, progress)
+      const exit = smoothstep(0.8, 0.98, progress)
+      targetX = mix(-rail, rail * 0.95, approach)
+      targetY = mix(0.2, 0.16, approach)
+      targetScale = mix(0.47, 0.62, approach) * (1 - exit)
+      targetRotationY = mix(0.48, state.pointer.x * 0.16, approach)
+      targetRotationX = -state.pointer.y * 0.035
+      darkStage = 1
+      weights = {
+        idle: 0.08,
+        walk: 0,
+        run: 0,
+        agree: 0.74,
+        headShake: 0.18,
+        sneak_pose: 0,
+      }
+    }
+
+    Object.entries(weights).forEach(([name, weight]) => {
+      actions[name]?.setEffectiveWeight(current.reducedMotion && name !== 'idle' ? 0 : weight)
+    })
+    if (current.reducedMotion) actions.idle?.setEffectiveWeight(1)
+
+    mercury.color.copy(chromeDay).lerp(chromeNight, darkStage)
+    mercury.envMapIntensity = mix(2.8, 3.55, darkStage)
+
+    const follow = 1 - Math.exp(-delta * 4.6)
+    group.current.position.x += (targetX - group.current.position.x) * follow
+    group.current.position.y += (targetY - group.current.position.y) * follow
+    body.current.rotation.x += (targetRotationX - body.current.rotation.x) * follow
+    body.current.rotation.y += (targetRotationY - body.current.rotation.y) * follow
+    body.current.rotation.z += (targetRotationZ - body.current.rotation.z) * follow
     group.current.scale.x += (targetScale - group.current.scale.x) * follow
     group.current.scale.y += (targetScale - group.current.scale.y) * follow
     group.current.scale.z += (targetScale - group.current.scale.z) * follow
-    group.current.position.x += (Math.sin(progress * Math.PI) * 0.16 - group.current.position.x) * follow
-    group.current.position.y += (progress * 0.28 - group.current.position.y) * follow
+    group.current.visible = group.current.scale.x > 0.012
   })
 
   return (
     <group ref={group}>
-      <primitive object={scene} />
+      <group ref={body}>
+        <primitive object={scene} />
+      </group>
     </group>
   )
 }
 
-export default function Scene({ active = true, scrollProgress, reducedMotion = false }) {
+export default function CharacterGuide() {
+  const layerRef = useRef()
+  const story = useCharacterStory(layerRef)
+
   return (
-    <Canvas
-      dpr={[1, 1.75]}
-      camera={{ position: [0, 1.05, 3.4], fov: 34 }}
-      gl={{ antialias: true, alpha: true }}
-      style={{ pointerEvents: 'none' }}
-      // canvas ignores pointer events, so read the cursor from the whole page
-      eventSource={typeof document !== 'undefined' ? document.body : undefined}
-      eventPrefix="client"
-      // pause the render loop when the hero is off-screen (saves GPU/battery)
-      frameloop={active ? 'always' : 'never'}
-    >
-      <CameraRig />
-      {/* Procedural studio cards keep the chrome readable without downloading an HDRI. */}
-      <Environment resolution={256}>
-        <Lightformer
-          form="rect"
-          intensity={5}
-          color="#ffffff"
-          scale={[8, 2, 1]}
-          position={[0, 5, -7]}
-        />
-        <Lightformer
-          form="rect"
-          intensity={4}
-          color="#58e7ff"
-          scale={[2, 7, 1]}
-          position={[-5, 1, 0]}
-          rotation-y={Math.PI / 2}
-        />
-        <Lightformer
-          form="rect"
-          intensity={4.5}
-          color="#a875ff"
-          scale={[2, 7, 1]}
-          position={[5, 1, 0]}
-          rotation-y={-Math.PI / 2}
-        />
-        <Lightformer
-          form="ring"
-          intensity={3.5}
-          color="#ff6fd8"
-          scale={3}
-          position={[0, 1, -5]}
-        />
-      </Environment>
-      <ambientLight intensity={0.28} />
-      <directionalLight
-        position={[4, 7, 5]}
-        intensity={3.6}
-        color="#d9f4ff"
-        castShadow
-        shadow-mapSize={[1024, 1024]}
-      />
-      {/* Cyan and violet edge lights create the cool Y2K colour split. */}
-      <directionalLight position={[-5, 3, 1]} intensity={3.1} color="#50e6ff" />
-      <directionalLight position={[4, 2, -4]} intensity={3.5} color="#9c6cff" />
-      <directionalLight position={[0, 5, -6]} intensity={2.8} color="#ff70d7" />
-      <Suspense fallback={null}>
-        <Human scrollProgress={scrollProgress} reducedMotion={reducedMotion} />
-        <ContactShadows
-          position={[0, 0.01, 0]}
-          opacity={0.34}
-          scale={4}
-          blur={2.6}
-          far={1.4}
-          color="#455370"
-        />
-      </Suspense>
-    </Canvas>
+    <div className="character-layer" ref={layerRef} aria-hidden="true">
+      <Canvas
+        dpr={[1, 1.75]}
+        camera={{ position: [0, 1.05, 3.4], fov: 34 }}
+        gl={{ antialias: true, alpha: true }}
+        style={{ pointerEvents: 'none' }}
+        eventSource={typeof document !== 'undefined' ? document.body : undefined}
+        eventPrefix="client"
+      >
+        <CameraRig />
+        {/* Procedural studio cards keep the chrome readable without downloading an HDRI. */}
+        <Environment resolution={256}>
+          <Lightformer form="rect" intensity={5} color="#ffffff" scale={[8, 2, 1]} position={[0, 5, -7]} />
+          <Lightformer form="rect" intensity={4} color="#58e7ff" scale={[2, 7, 1]} position={[-5, 1, 0]} rotation-y={Math.PI / 2} />
+          <Lightformer form="rect" intensity={4.5} color="#a875ff" scale={[2, 7, 1]} position={[5, 1, 0]} rotation-y={-Math.PI / 2} />
+          <Lightformer form="ring" intensity={3.5} color="#ff6fd8" scale={3} position={[0, 1, -5]} />
+        </Environment>
+        <ambientLight intensity={0.28} />
+        <directionalLight position={[4, 7, 5]} intensity={3.6} color="#d9f4ff" castShadow shadow-mapSize={[1024, 1024]} />
+        <directionalLight position={[-5, 3, 1]} intensity={3.1} color="#50e6ff" />
+        <directionalLight position={[4, 2, -4]} intensity={3.5} color="#9c6cff" />
+        <directionalLight position={[0, 5, -6]} intensity={2.8} color="#ff70d7" />
+        <Suspense fallback={null}>
+          <Human story={story} />
+        </Suspense>
+      </Canvas>
+    </div>
   )
 }
 

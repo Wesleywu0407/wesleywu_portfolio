@@ -11,7 +11,7 @@ export default function Marquee() {
     </>
   )
   return (
-    <div className="marquee" aria-hidden="true">
+    <div className="marquee" data-character-zone="marquee" aria-hidden="true">
       <div className="marquee-track">
         <div className="marquee-chunk">{chunk}</div>
         <div className="marquee-chunk">{chunk}</div>

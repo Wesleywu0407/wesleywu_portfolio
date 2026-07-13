@@ -212,12 +212,18 @@ img { max-width: 100%; display: block; }
   flex-direction: column;
   justify-content: flex-end;
 }
-.hero-canvas {
+.character-layer {
   position: fixed;
   inset: 0;
-  z-index: 2;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.999;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+  transition: opacity 0.35s var(--ease-out);
 }
-.hero-canvas canvas { touch-action: pan-y; }
+.character-layer canvas { touch-action: pan-y; }
 .hero-eyebrow {
   position: absolute;
   top: clamp(80px, 12vh, 130px);
@@ -339,6 +345,10 @@ img { max-width: 100%; display: block; }
 /* ---------- section heads ---------- */
 section { position: relative; }
 .sec-pad { padding: clamp(90px, 14vh, 170px) 0; }
+.sec-pad > .wrap {
+  position: relative;
+  z-index: 3;
+}
 .sec-head {
   display: flex;
   align-items: flex-end;
@@ -371,6 +381,15 @@ section { position: relative; }
 
 /* ---------- work ---------- */
 .work-list { border-top: 1px solid var(--line); }
+@media (min-width: 1000px) {
+  #work > .wrap,
+  #about > .wrap {
+    padding-right: clamp(300px, 29vw, 460px);
+  }
+  #journey > .wrap {
+    padding-left: clamp(300px, 27vw, 430px);
+  }
+}
 .work-row {
   position: relative;
   display: grid;
@@ -617,6 +636,10 @@ section { position: relative; }
 .contact {
   text-align: center;
   overflow: hidden;
+}
+.contact > .wrap {
+  position: relative;
+  z-index: 3;
 }
 .contact .label { display: inline-block; }
 .contact-title {

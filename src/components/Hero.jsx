@@ -1,32 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
-import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion'
-import Scene from './Scene.jsx'
+import { motion, useReducedMotion } from 'framer-motion'
 
 const NAME = 'WESLEY WU'
 
 export default function Hero({ ready }) {
   const reduce = useReducedMotion()
-  const heroRef = useRef(null)
-  const [inView, setInView] = useState(true)
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ['start start', 'end start'],
-  })
-  const canvasOpacity = useTransform(scrollYProgress, [0, 0.35, 0.62], [1, 1, 0])
-
-  useEffect(() => {
-    const el = heroRef.current
-    if (!el) return
-    const io = new IntersectionObserver(
-      ([entry]) => setInView(entry.isIntersecting),
-      { rootMargin: '0px' },
-    )
-    io.observe(el)
-    return () => io.disconnect()
-  }, [])
 
   return (
-    <section className="hero" id="top" aria-label="Intro" ref={heroRef}>
+    <section className="hero" id="top" aria-label="Intro">
       <div className="hero-stage">
       <motion.div
         className="hero-eyebrow"
@@ -50,14 +30,6 @@ export default function Hero({ ready }) {
         <span className="line-item">MIT — Univ. of Queensland</span>
         <span className="line-item" style={{ marginTop: 10 }}><strong>Based in</strong></span>
         <span className="line-item">Brisbane, Australia</span>
-      </motion.div>
-
-      <motion.div className="hero-canvas" style={{ opacity: canvasOpacity }}>
-        <Scene
-          active={inView}
-          scrollProgress={scrollYProgress}
-          reducedMotion={reduce}
-        />
       </motion.div>
 
       <h1 className="hero-name" aria-label="Wesley Wu">
@@ -96,7 +68,7 @@ export default function Hero({ ready }) {
           Scroll
         </span>
         <span className="label">Mingjuan (Wesley) Wu</span>
-        <span className="scroll-hint">Scroll — his pose transforms</span>
+        <span className="scroll-hint">Scroll — follow the mercury guide</span>
       </motion.div>
       </div>
     </section>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, useMotionValue, useSpring } from 'framer-motion'
 import Reveal from './Reveal.jsx'
 import { PROJECTS } from '../data.js'
@@ -46,8 +46,21 @@ export default function Work() {
     x.set(e.clientX + 24)
     y.set(e.clientY - 110)
     const row = e.target.closest('.work-row')
-    setHovered(row ? PROJECTS[Number(row.dataset.index)] : null)
+    const index = row ? Number(row.dataset.index) : null
+    setHovered(index === null ? null : PROJECTS[index])
+    window.dispatchEvent(new CustomEvent('character-project-focus', { detail: index }))
   }
+
+  const onLeave = () => {
+    setHovered(null)
+    window.dispatchEvent(new CustomEvent('character-project-focus', { detail: null }))
+  }
+
+  useEffect(() => {
+    const clearPreview = () => onLeave()
+    window.addEventListener('scroll', clearPreview, { passive: true })
+    return () => window.removeEventListener('scroll', clearPreview)
+  }, [])
 
   return (
     <section id="work" className="sec-pad">
@@ -65,7 +78,7 @@ export default function Work() {
         <div
           className="work-list"
           onMouseMove={onMove}
-          onMouseLeave={() => setHovered(null)}
+          onMouseLeave={onLeave}
         >
           {PROJECTS.map((p, i) => (
             <Row key={p.title} project={p} index={i} />
