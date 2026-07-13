@@ -77,6 +77,8 @@ function useCharacterStory(layerRef) {
     runStartedAt: 0,
     runUntil: 0,
     transitionDirection: 1,
+    transitionFrom: null,
+    transitionTo: null,
   })
 
   useEffect(() => {
@@ -143,21 +145,24 @@ function useCharacterStory(layerRef) {
       }
 
       const heroEnd = current.sections.marquee?.top || current.sections.hero?.bottom || window.innerHeight
-      const aboutStart = (current.sections.about?.top ?? heroEnd * 2) - window.innerHeight * 0.55
-      const journeyStart = (current.sections.journey?.top ?? aboutStart * 2) - window.innerHeight * 0.55
-      const contactStart = (current.sections.contact?.top ?? journeyStart * 2) - window.innerHeight * 0.6
-      const nextZone = y < heroEnd ? 0 : y < aboutStart ? 1 : y < journeyStart ? 2 : y < contactStart ? 3 : 4
+      const workStart = (current.sections.work?.top ?? heroEnd + window.innerHeight) - window.innerHeight * 0.82
+      const aboutStart = (current.sections.about?.top ?? workStart + window.innerHeight) - window.innerHeight * 0.82
+      const journeyStart = (current.sections.journey?.top ?? aboutStart + window.innerHeight) - window.innerHeight * 0.82
+      const contactStart = (current.sections.contact?.top ?? journeyStart + window.innerHeight) - window.innerHeight * 0.82
+      const nextZone = y < workStart ? 0 : y < aboutStart ? 1 : y < journeyStart ? 2 : y < contactStart ? 3 : 4
 
       if (current.zone === null) {
         current.zone = nextZone
       } else if (nextZone !== current.zone) {
+        current.transitionFrom = current.zone
+        current.transitionTo = nextZone
         current.transitionDirection = Math.sign(nextZone - current.zone) || current.direction
         current.zone = nextZone
         current.runStartedAt = now
         current.runUntil = current.reducedMotion ? now : now + 1150
       }
 
-      if (layerRef.current) layerRef.current.style.zIndex = y > heroEnd * 0.28 ? '2' : '1'
+      if (layerRef.current) layerRef.current.style.zIndex = y > workStart * 0.72 ? '2' : '1'
 
       lastY = y
       lastTime = now
@@ -209,6 +214,7 @@ function useCharacterStory(layerRef) {
 function Human({ story }) {
   const group = useRef()
   const body = useRef()
+  const initialized = useRef(false)
   const { scene, animations } = useGLTF(MODEL_URL)
   const { actions } = useAnimations(animations, scene)
   const chromeDay = useMemo(() => new Color('#b9c7dc'), [])
@@ -276,9 +282,10 @@ function Human({ story }) {
     const viewportWidth = current.viewportWidth || state.size.width
     const y = current.scrollY
     const heroEnd = sections.marquee?.top || sections.hero?.bottom || viewportHeight
-    const aboutStart = (sections.about?.top ?? heroEnd * 2) - viewportHeight * 0.55
-    const journeyStart = (sections.journey?.top ?? aboutStart * 2) - viewportHeight * 0.55
-    const contactStart = (sections.contact?.top ?? journeyStart * 2) - viewportHeight * 0.6
+    const workStart = (sections.work?.top ?? heroEnd + viewportHeight) - viewportHeight * 0.82
+    const aboutStart = (sections.about?.top ?? workStart + viewportHeight) - viewportHeight * 0.82
+    const journeyStart = (sections.journey?.top ?? aboutStart + viewportHeight) - viewportHeight * 0.82
+    const contactStart = (sections.contact?.top ?? journeyStart + viewportHeight) - viewportHeight * 0.82
     const narrow = viewportWidth < 900
     const aspect = viewportWidth / Math.max(1, viewportHeight)
     const rail = Math.min(1.38, Math.max(0.92, aspect * 0.78))
@@ -309,48 +316,29 @@ function Human({ story }) {
         headShake: 0,
         sneak_pose: 0,
       }
-    } else if (y < heroEnd) {
-      const progress = clamp01(y / Math.max(1, heroEnd))
-      const escape = smoothstep(0.14, 0.92, progress)
-      const stride = smoothstep(0.06, 0.32, progress)
-      const sprint = smoothstep(0.45, 0.72, progress)
-      targetX = mix(0, rail, escape)
-      targetY = mix(0, 0.2, escape)
-      targetScale = mix(1, 0.52, escape)
-      targetRotationX = progress * 0.055
-      targetRotationY += mix(0, -0.42, escape)
-      targetRotationZ = -Math.sin(progress * Math.PI) * 0.04
-      weights = {
-        idle: 1 - stride,
-        walk: stride * (1 - sprint),
-        run: sprint,
-        agree: 0,
-        headShake: 0,
-        sneak_pose: 0,
-      }
+    } else if (y < workStart) {
+      targetX = 0
+      targetY = 0
+      targetScale = 1
+      weights = { idle: 1, walk: 0, run: 0, agree: 0, headShake: 0, sneak_pose: 0 }
     } else if (y < aboutStart) {
       const rowCount = Math.max(1, current.rows.length - 1)
       const rowPhase = current.activeWork / rowCount - 0.5
-      const runWeight = smoothstep(0.85, 1.75, speed)
-      const walkWeight = smoothstep(0.06, 0.5, speed) * (1 - runWeight)
-      const gesture = (1 - walkWeight - runWeight) * (current.activeWork % 2 ? 0.2 : 0)
+      const gesture = current.activeWork % 2 ? 0.2 : 0
       targetX = rail
       targetY = 0.22 + rowPhase * 0.1
       targetScale = 0.53
-      targetRotationX = current.direction > 0 ? 0.035 : -0.035
-      targetRotationY = -0.5 + current.direction * 0.045
+      targetRotationY = -0.5
       targetRotationZ = rowPhase * 0.035
       weights = {
-        idle: Math.max(0, 1 - walkWeight - runWeight - gesture),
-        walk: walkWeight,
-        run: runWeight,
+        idle: 1 - gesture,
+        walk: 0,
+        run: 0,
         agree: gesture,
         headShake: 0,
         sneak_pose: 0,
       }
     } else if (y < journeyStart) {
-      const moving = smoothstep(0.05, 0.55, speed)
-      const agree = (1 - moving) * 0.38
       targetX = rail
       targetY = 0.2
       targetScale = 0.5
@@ -358,31 +346,22 @@ function Human({ story }) {
       targetRotationY = -0.52
       darkStage = 1
       weights = {
-        idle: 1 - moving - agree,
-        walk: moving,
+        idle: 0.62,
+        walk: 0,
         run: 0,
-        agree,
+        agree: 0.38,
         headShake: 0,
         sneak_pose: 0,
       }
     } else if (y < contactStart) {
-      const crossing = smoothstep(
-        (sections.journey?.top ?? journeyStart) - viewportHeight * 0.75,
-        (sections.journey?.top ?? journeyStart) - viewportHeight * 0.12,
-        y,
-      )
-      const runWeight = smoothstep(0.8, 1.6, speed)
-      const walkWeight = Math.max(smoothstep(0.04, 0.45, speed), 0.22) * (1 - runWeight)
-      targetX = mix(rail, -rail, crossing)
+      targetX = -rail
       targetY = 0.2
       targetScale = 0.47
-      targetRotationX = current.direction > 0 ? 0.035 : -0.035
-      targetRotationY = mix(-0.5, 0.48, crossing)
-      targetRotationZ = Math.sin(crossing * Math.PI) * 0.055
+      targetRotationY = 0.48
       weights = {
-        idle: Math.max(0, 1 - walkWeight - runWeight),
-        walk: walkWeight,
-        run: runWeight,
+        idle: 1,
+        walk: 0,
+        run: 0,
         agree: 0,
         headShake: 0,
         sneak_pose: 0,
@@ -392,12 +371,11 @@ function Human({ story }) {
       const progress = clamp01(
         (y - contactStart) / Math.max(1, (contact?.height ?? viewportHeight) + viewportHeight * 0.15),
       )
-      const approach = smoothstep(0.02, 0.36, progress)
       const exit = smoothstep(0.8, 0.98, progress)
-      targetX = mix(-rail, rail * 0.95, approach)
-      targetY = mix(0.2, 0.16, approach)
-      targetScale = mix(0.47, 0.62, approach) * (1 - exit)
-      targetRotationY = mix(0.48, state.pointer.x * 0.16, approach)
+      targetX = rail * 0.95
+      targetY = 0.16
+      targetScale = 0.62 * (1 - exit)
+      targetRotationY = state.pointer.x * 0.16
       targetRotationX = -state.pointer.y * 0.035
       darkStage = 1
       weights = {
@@ -418,6 +396,7 @@ function Human({ story }) {
 
     const runDuration = Math.max(1, current.runUntil - current.runStartedAt)
     const runElapsed = now - current.runStartedAt
+    const runProgress = clamp01(runElapsed / runDuration)
     const runBurst = current.reducedMotion || now >= current.runUntil
       ? 0
       : smoothstep(0, 140, runElapsed) * (1 - smoothstep(runDuration - 260, runDuration, runElapsed))
@@ -429,7 +408,17 @@ function Human({ story }) {
       weights.run = weights.run + (1 - weights.run) * runBurst
       targetRotationX += runBurst * 0.08
       targetRotationZ -= runBurst * current.transitionDirection * 0.035
-      targetY += Math.sin(clamp01(runElapsed / runDuration) * Math.PI) * 0.055
+      targetY += Math.sin(runProgress * Math.PI) * 0.055
+
+      // Work and About share the right rail, so the character visibly runs
+      // offstage and back in instead of running in place between them.
+      const loopsRightRail = [current.transitionFrom, current.transitionTo]
+        .sort()
+        .join('-') === '1-2'
+      if (loopsRightRail) {
+        targetX += Math.sin(runProgress * Math.PI) * 0.82
+        targetY += Math.sin(runProgress * Math.PI) * 0.08
+      }
     }
 
     const idleEnergy = standingBlend * (1 - runBurst)
@@ -445,15 +434,22 @@ function Human({ story }) {
     mercury.color.copy(chromeDay).lerp(chromeNight, darkStage)
     mercury.envMapIntensity = mix(2.8, 3.55, darkStage)
 
-    const follow = 1 - Math.exp(-delta * 4.6)
-    group.current.position.x += (targetX - group.current.position.x) * follow
-    group.current.position.y += (targetY - group.current.position.y) * follow
-    body.current.rotation.x += (targetRotationX - body.current.rotation.x) * follow
-    body.current.rotation.y += (targetRotationY - body.current.rotation.y) * follow
-    body.current.rotation.z += (targetRotationZ - body.current.rotation.z) * follow
-    group.current.scale.x += (targetScale - group.current.scale.x) * follow
-    group.current.scale.y += (targetScale - group.current.scale.y) * follow
-    group.current.scale.z += (targetScale - group.current.scale.z) * follow
+    const follow = 1 - Math.exp(-delta * (runBurst > 0 ? 6.8 : 4.6))
+    if (!initialized.current) {
+      group.current.position.set(targetX, targetY, 0)
+      body.current.rotation.set(targetRotationX, targetRotationY, targetRotationZ)
+      group.current.scale.setScalar(targetScale)
+      initialized.current = true
+    } else {
+      group.current.position.x += (targetX - group.current.position.x) * follow
+      group.current.position.y += (targetY - group.current.position.y) * follow
+      body.current.rotation.x += (targetRotationX - body.current.rotation.x) * follow
+      body.current.rotation.y += (targetRotationY - body.current.rotation.y) * follow
+      body.current.rotation.z += (targetRotationZ - body.current.rotation.z) * follow
+      group.current.scale.x += (targetScale - group.current.scale.x) * follow
+      group.current.scale.y += (targetScale - group.current.scale.y) * follow
+      group.current.scale.z += (targetScale - group.current.scale.z) * follow
+    }
     group.current.visible = group.current.scale.x > 0.012
   })
 
