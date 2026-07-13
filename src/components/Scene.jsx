@@ -1,7 +1,13 @@
 import { Suspense, useEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { useGLTF, useAnimations, ContactShadows } from '@react-three/drei'
-import { MeshStandardMaterial, Color } from 'three'
+import {
+  useGLTF,
+  useAnimations,
+  ContactShadows,
+  Environment,
+  Lightformer,
+} from '@react-three/drei'
+import { MeshPhysicalMaterial, Color } from 'three'
 
 // Keep the whole figure framed on any aspect ratio — pull the camera back
 // on narrow / portrait screens so arms never get cropped.
@@ -27,14 +33,20 @@ function Human() {
   const { scene, animations } = useGLTF(MODEL_URL)
   const { actions } = useAnimations(animations, scene)
 
-  // one shared white-plaster material so the figure reads as a sculpture,
-  // not a stock 3D asset — keeps the whole hero strictly black & white.
-  const plaster = useMemo(
+  // Liquid-chrome material: a cool silver base, tight reflections and a subtle
+  // blue-violet iridescent shift give the figure a polished Y2K mercury finish.
+  const mercury = useMemo(
     () =>
-      new MeshStandardMaterial({
-        color: new Color('#eceae2'),
-        roughness: 0.95,
-        metalness: 0.0,
+      new MeshPhysicalMaterial({
+        color: new Color('#b9c7dc'),
+        metalness: 1,
+        roughness: 0.12,
+        clearcoat: 1,
+        clearcoatRoughness: 0.08,
+        envMapIntensity: 2.8,
+        iridescence: 0.72,
+        iridescenceIOR: 1.45,
+        iridescenceThicknessRange: [120, 460],
       }),
     [],
   )
@@ -48,11 +60,13 @@ function Human() {
         o.castShadow = true
         o.receiveShadow = true
         o.frustumCulled = false
-        o.material = plaster
+        o.material = mercury
       }
     })
     return () => clip && clip.fadeOut(0.3)
-  }, [actions, scene, plaster])
+  }, [actions, scene, mercury])
+
+  useEffect(() => () => mercury.dispose(), [mercury])
 
   // the figure lazily turns to face the cursor
   useFrame((state, delta) => {
@@ -84,26 +98,60 @@ export default function Scene({ active = true }) {
       frameloop={active ? 'always' : 'never'}
     >
       <CameraRig />
-      {/* sculptural lighting: soft ambient + strong key so the white form reads */}
-      <ambientLight intensity={0.55} />
+      {/* Procedural studio cards keep the chrome readable without downloading an HDRI. */}
+      <Environment resolution={256}>
+        <Lightformer
+          form="rect"
+          intensity={5}
+          color="#ffffff"
+          scale={[8, 2, 1]}
+          position={[0, 5, -7]}
+        />
+        <Lightformer
+          form="rect"
+          intensity={4}
+          color="#58e7ff"
+          scale={[2, 7, 1]}
+          position={[-5, 1, 0]}
+          rotation-y={Math.PI / 2}
+        />
+        <Lightformer
+          form="rect"
+          intensity={4.5}
+          color="#a875ff"
+          scale={[2, 7, 1]}
+          position={[5, 1, 0]}
+          rotation-y={-Math.PI / 2}
+        />
+        <Lightformer
+          form="ring"
+          intensity={3.5}
+          color="#ff6fd8"
+          scale={3}
+          position={[0, 1, -5]}
+        />
+      </Environment>
+      <ambientLight intensity={0.28} />
       <directionalLight
         position={[4, 7, 5]}
-        intensity={3.2}
+        intensity={3.6}
+        color="#d9f4ff"
         castShadow
         shadow-mapSize={[1024, 1024]}
       />
-      <directionalLight position={[-5, 3, -2]} intensity={1.1} color="#ffffff" />
-      {/* rim light from behind to separate the figure from the paper */}
-      <directionalLight position={[0, 4, -6]} intensity={2.4} color="#ffffff" />
+      {/* Cyan and violet edge lights create the cool Y2K colour split. */}
+      <directionalLight position={[-5, 3, 1]} intensity={3.1} color="#50e6ff" />
+      <directionalLight position={[4, 2, -4]} intensity={3.5} color="#9c6cff" />
+      <directionalLight position={[0, 5, -6]} intensity={2.8} color="#ff70d7" />
       <Suspense fallback={null}>
         <Human />
         <ContactShadows
           position={[0, 0.01, 0]}
-          opacity={0.42}
+          opacity={0.34}
           scale={4}
           blur={2.6}
           far={1.4}
-          color="#0e0e0c"
+          color="#455370"
         />
       </Suspense>
     </Canvas>
