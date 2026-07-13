@@ -28,7 +28,12 @@ function CameraRig() {
 const MODEL_URL =
   'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/models/gltf/Xbot.glb'
 
-function Human() {
+function smoothstep(min, max, value) {
+  const x = Math.min(1, Math.max(0, (value - min) / (max - min)))
+  return x * x * (3 - 2 * x)
+}
+
+function Human({ scrollProgress, reducedMotion }) {
   const group = useRef()
   const { scene, animations } = useGLTF(MODEL_URL)
   const { actions } = useAnimations(animations, scene)
@@ -52,9 +57,23 @@ function Human() {
   )
 
   useEffect(() => {
-    // play whatever idle-like clip ships with the model (avoids a T-pose flash)
-    const clip = actions['idle'] || actions[Object.keys(actions)[0]]
-    if (clip) clip.reset().fadeIn(0.5).play()
+    // Run the clips together and blend their weights from scroll progress.
+    // This keeps transitions fluid instead of snapping between canned poses.
+    const clips = ['idle', 'walk', 'agree', 'sneak_pose']
+      .map((name) => actions[name])
+      .filter(Boolean)
+
+    clips.forEach((clip, index) => {
+      clip.reset().play()
+      clip.enabled = true
+      clip.setEffectiveWeight(index === 0 ? 1 : 0)
+    })
+
+    if (actions.idle) actions.idle.timeScale = 0.65
+    if (actions.walk) actions.walk.timeScale = 0.85
+    if (actions.agree) actions.agree.timeScale = 0.72
+    if (actions.sneak_pose) actions.sneak_pose.timeScale = 0.55
+
     scene.traverse((o) => {
       if (o.isMesh) {
         o.castShadow = true
@@ -63,7 +82,7 @@ function Human() {
         o.material = mercury
       }
     })
-    return () => clip && clip.fadeOut(0.3)
+    return () => clips.forEach((clip) => clip.fadeOut(0.25))
   }, [actions, scene, mercury])
 
   useEffect(() => () => mercury.dispose(), [mercury])
@@ -71,10 +90,31 @@ function Human() {
   // the figure lazily turns to face the cursor
   useFrame((state, delta) => {
     if (!group.current) return
-    const targetY = state.pointer.x * 0.55
-    const targetX = -state.pointer.y * 0.06
-    group.current.rotation.y += (targetY - group.current.rotation.y) * Math.min(1, delta * 3)
-    group.current.rotation.x += (targetX - group.current.rotation.x) * Math.min(1, delta * 3)
+    const rawProgress = reducedMotion ? 0 : (scrollProgress?.get() ?? 0)
+    const progress = smoothstep(0, 0.58, rawProgress)
+    const follow = Math.min(1, delta * 4)
+
+    const idleOut = smoothstep(0.05, 0.28, progress)
+    const walkOut = smoothstep(0.46, 0.67, progress)
+    const agreeOut = smoothstep(0.72, 0.93, progress)
+    actions.idle?.setEffectiveWeight(1 - idleOut)
+    actions.walk?.setEffectiveWeight(idleOut * (1 - walkOut))
+    actions.agree?.setEffectiveWeight(walkOut * (1 - agreeOut))
+    actions.sneak_pose?.setEffectiveWeight(agreeOut)
+
+    const targetY = state.pointer.x * 0.34 + progress * 0.9
+    const targetX = -state.pointer.y * 0.05 + progress * 0.1
+    const targetZ = -Math.sin(progress * Math.PI) * 0.055
+    group.current.rotation.y += (targetY - group.current.rotation.y) * follow
+    group.current.rotation.x += (targetX - group.current.rotation.x) * follow
+    group.current.rotation.z += (targetZ - group.current.rotation.z) * follow
+
+    const targetScale = 1 - progress * 0.14
+    group.current.scale.x += (targetScale - group.current.scale.x) * follow
+    group.current.scale.y += (targetScale - group.current.scale.y) * follow
+    group.current.scale.z += (targetScale - group.current.scale.z) * follow
+    group.current.position.x += (Math.sin(progress * Math.PI) * 0.16 - group.current.position.x) * follow
+    group.current.position.y += (progress * 0.28 - group.current.position.y) * follow
   })
 
   return (
@@ -84,7 +124,7 @@ function Human() {
   )
 }
 
-export default function Scene({ active = true }) {
+export default function Scene({ active = true, scrollProgress, reducedMotion = false }) {
   return (
     <Canvas
       dpr={[1, 1.75]}
@@ -144,7 +184,7 @@ export default function Scene({ active = true }) {
       <directionalLight position={[4, 2, -4]} intensity={3.5} color="#9c6cff" />
       <directionalLight position={[0, 5, -6]} intensity={2.8} color="#ff70d7" />
       <Suspense fallback={null}>
-        <Human />
+        <Human scrollProgress={scrollProgress} reducedMotion={reducedMotion} />
         <ContactShadows
           position={[0, 0.01, 0]}
           opacity={0.34}

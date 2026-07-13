@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { motion, useReducedMotion } from 'framer-motion'
+import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion'
 import Scene from './Scene.jsx'
 
 const NAME = 'WESLEY WU'
@@ -8,6 +8,11 @@ export default function Hero({ ready }) {
   const reduce = useReducedMotion()
   const heroRef = useRef(null)
   const [inView, setInView] = useState(true)
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ['start start', 'end start'],
+  })
+  const canvasOpacity = useTransform(scrollYProgress, [0, 0.35, 0.62], [1, 1, 0])
 
   useEffect(() => {
     const el = heroRef.current
@@ -22,6 +27,7 @@ export default function Hero({ ready }) {
 
   return (
     <section className="hero" id="top" aria-label="Intro" ref={heroRef}>
+      <div className="hero-stage">
       <motion.div
         className="hero-eyebrow"
         initial={{ opacity: 0, y: 16 }}
@@ -46,9 +52,13 @@ export default function Hero({ ready }) {
         <span className="line-item">Brisbane, Australia</span>
       </motion.div>
 
-      <div className="hero-canvas">
-        <Scene active={inView} />
-      </div>
+      <motion.div className="hero-canvas" style={{ opacity: canvasOpacity }}>
+        <Scene
+          active={inView}
+          scrollProgress={scrollYProgress}
+          reducedMotion={reduce}
+        />
+      </motion.div>
 
       <h1 className="hero-name" aria-label="Wesley Wu">
         {NAME.split('').map((ch, i) =>
@@ -86,8 +96,9 @@ export default function Hero({ ready }) {
           Scroll
         </span>
         <span className="label">Mingjuan (Wesley) Wu</span>
-        <span className="scroll-hint">Move your cursor — he follows</span>
+        <span className="scroll-hint">Scroll — his pose transforms</span>
       </motion.div>
+      </div>
     </section>
   )
 }
