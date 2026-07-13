@@ -25,10 +25,10 @@ export default function About() {
             <div className="about-body">
               <p>
                 Right now I'm doing my Master of IT at the University of Queensland and
-                interning at HDRE, where I'm building a 3D game for the browser. Before
-                that I taught agents to make decisions with reinforcement learning,
-                made A* run fast with hand-built heuristics, and shipped 3D websites
-                with Three.js.
+                interning at HDRE, where I'm building a Python research dashboard for
+                Australia's renewable-energy transition and the National Electricity
+                Market. Alongside that, I'm building 2nd Eyes — an immersive 3D
+                photography game in Three.js.
               </p>
               <p>
                 What ties it together: I like systems you can feel — a game loop, a
@@ -40,7 +40,7 @@ export default function About() {
 
           <Reveal className="about-facts" delay={0.12}>
             {[
-              ['Now', '3D Game Dev Intern — HDRE'],
+              ['Now', 'Data & Research Intern — HDRE'],
               ['Study', 'MIT, Univ. of Queensland'],
               ['Focus', 'Full-stack · 3D web · AI/ML'],
               ['Location', 'Brisbane, Australia'],

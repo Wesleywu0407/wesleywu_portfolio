@@ -39,7 +39,7 @@ export default function Hero({ ready }) {
         transition={{ duration: 0.7, delay: 0.62, ease: [0.22, 1, 0.36, 1] }}
       >
         <span className="line-item"><strong>Currently</strong></span>
-        <span className="line-item">3D game dev intern @ HDRE</span>
+        <span className="line-item">Data &amp; research intern @ HDRE</span>
         <span className="line-item" style={{ marginTop: 10 }}><strong>Studying</strong></span>
         <span className="line-item">MIT — Univ. of Queensland</span>
         <span className="line-item" style={{ marginTop: 10 }}><strong>Based in</strong></span>

@@ -7,13 +7,13 @@ export const SOCIALS = [
 
 export const PROJECTS = [
   {
-    title: 'HDRE — 3D Game',
-    serif: 'in progress',
-    desc: 'Building a browser 3D game end-to-end during my HDRE internship — gameplay systems, 3D scenes and interaction design.',
-    tags: 'Three.js · JavaScript · Game Dev',
+    title: 'HDRE',
+    serif: 'internship',
+    desc: "Built a research dashboard for Australia's renewable-energy transition, combining NEM market data, grid infrastructure and AI data-centre demand.",
+    tags: 'Python · Streamlit · Energy Data',
     year: '2026',
-    kind: 'Internship',
-    url: 'https://github.com/Wesleywu0407',
+    kind: 'Data & Research Internship',
+    url: 'https://github.com/Wesleywu0407/hdrenewable_int',
   },
   {
     title: 'AUSLI',
@@ -44,12 +44,12 @@ export const PROJECTS = [
   },
   {
     title: '2nd Eyes',
-    serif: 'on film',
-    desc: 'A film-photography site with a custom gallery layout engine that adapts to any image ratio without distortion.',
-    tags: 'HTML · CSS · JavaScript',
-    year: '2024',
-    kind: 'Web Design',
-    url: 'https://github.com/Wesleywu0407/2nd-eyes',
+    serif: '3D game',
+    desc: 'An immersive Three.js photography world with explorable gallery rooms, first-person movement and interactive artworks.',
+    tags: 'Three.js · JavaScript · 3D Game',
+    year: '2026',
+    kind: '3D Game',
+    url: 'https://github.com/Wesleywu0407/2ndgames',
   },
   {
     title: 'Star Command',
@@ -65,9 +65,9 @@ export const PROJECTS = [
 export const EXPERIENCE = [
   {
     when: '2026 — Now',
-    what: '3D Game Developer Intern',
+    what: 'Data & Research Intern',
     where: 'HDRE',
-    desc: 'Creating a 3D game for the web — gameplay logic, scene building and performance tuning.',
+    desc: "Building a Python and Streamlit research dashboard for Australia's renewable-energy transition and the National Electricity Market.",
     now: true,
   },
   {
