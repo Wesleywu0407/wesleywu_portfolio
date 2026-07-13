@@ -1,0 +1,18 @@
+{
+  "name": "mercury-xbot",
+  "format": "glTF 2.0 binary",
+  "model": "models/mercury-xbot.glb",
+  "rigged": true,
+  "headBone": "mixamorig:Head",
+  "neckBone": "mixamorig:Neck",
+  "animations": [
+    "agree",
+    "headShake",
+    "idle",
+    "run",
+    "sad_pose",
+    "sneak_pose",
+    "walk"
+  ],
+  "threeJsMaterialHelper": "src/applyMercuryMaterial.js"
+}

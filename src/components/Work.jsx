@@ -48,12 +48,10 @@ export default function Work() {
     const row = e.target.closest('.work-row')
     const index = row ? Number(row.dataset.index) : null
     setHovered(index === null ? null : PROJECTS[index])
-    window.dispatchEvent(new CustomEvent('character-project-focus', { detail: index }))
   }
 
   const onLeave = () => {
     setHovered(null)
-    window.dispatchEvent(new CustomEvent('character-project-focus', { detail: null }))
   }
 
   useEffect(() => {

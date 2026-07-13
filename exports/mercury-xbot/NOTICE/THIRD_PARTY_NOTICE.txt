@@ -1,0 +1,11 @@
+ORIGINAL MODEL SOURCE
+
+Xbot.glb from the official three.js example assets:
+https://github.com/mrdoob/three.js/blob/r160/examples/models/gltf/Xbot.glb
+
+The GLB in this package preserves the original mesh, skeleton and animation clips.
+The mercury/Y2K look is applied separately at runtime by the included Three.js
+material helper.
+
+Before publicly redistributing the model, review the current licensing and asset
+terms in the original three.js repository.
