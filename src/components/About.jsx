@@ -40,7 +40,7 @@ export default function About() {
 
           <Reveal className="about-facts" delay={0.12}>
             {[
-              ['Now', 'Data & Research Intern — HDRE'],
+              ['Now', 'Software Engineer Intern (R&D) — HDRE'],
               ['Study', 'MIT, Univ. of Queensland'],
               ['Focus', 'Full-stack · 3D web · AI/ML'],
               ['Location', 'Brisbane, Australia'],
