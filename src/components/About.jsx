@@ -1,14 +1,23 @@
 import Reveal from './Reveal.jsx'
-import { SKILLS } from '../data.js'
+import { PROFILE, SKILLS } from '../data.js'
+
+const FACTS = [
+  ['Now', 'Software Engineer Intern (R&D) — HDRE'],
+  ['Study', PROFILE.studying],
+  ['Focus', 'Full-stack software engineering'],
+  ['Strength', 'Engineering + interaction design'],
+  ['Location', PROFILE.location],
+  ['Open to', PROFILE.openTo],
+]
 
 export default function About() {
   return (
-    <section id="about" className="inverted sec-pad">
+    <section id="about" className="inverted sec-pad" aria-labelledby="about-title">
       <div className="wrap">
         <div className="sec-head">
           <div>
             <Reveal as="span" className="label" y={0}>About</Reveal>
-            <Reveal as="h2" className="sec-title" y={20}>
+            <Reveal as="h2" className="sec-title" id="about-title" y={20}>
               Business brain,<br />
               <em>engineer's</em> hands
             </Reveal>
@@ -19,36 +28,36 @@ export default function About() {
         <div className="about-grid">
           <Reveal>
             <p className="about-lead">
-              I came to code through business school — so I build software the way
-              a product person would, <em>and ship it the way an engineer has to.</em>
+              I came to software through business, so I think about the product,
+              the user and the system <em>before I start building.</em>
             </p>
             <div className="about-body">
               <p>
-                Right now I'm doing my Master of IT at the University of Queensland and
-                interning at HDRE, where I'm building a Python research dashboard for
-                Australia's renewable-energy transition and the National Electricity
-                Market. Alongside that, I'm building 2nd Eyes — an immersive 3D
-                photography game in Three.js.
+                I am completing a Master of Information Technology at the University of
+                Queensland and working as a Software Engineer Intern at HDRE.
               </p>
               <p>
-                What ties it together: I like systems you can feel — a game loop, a
-                scroll interaction, an agent learning in real time. If it moves and
-                responds, I want to build it.
+                I build across the full product stack — from responsive interfaces and
+                interactive experiences to backend logic, APIs, databases and data-driven
+                applications.
+              </p>
+              <p>
+                My work includes a renewable-energy research dashboard, a full-stack
+                portfolio and content-management platform built for a 3D/CG designer, and
+                an ambitious browser-based 3D game.
+              </p>
+              <p>
+                My visual and interaction-design skills help me build software that is
+                clearer, more engaging and more polished.
               </p>
             </div>
           </Reveal>
 
-          <Reveal className="about-facts" delay={0.12}>
-            {[
-              ['Now', 'Software Engineer Intern (R&D) — HDRE'],
-              ['Study', 'MIT, Univ. of Queensland'],
-              ['Focus', 'Full-stack · 3D web · AI/ML'],
-              ['Location', 'Brisbane, Australia'],
-              ['Open to', 'Backend / Frontend / AI roles'],
-            ].map(([k, v]) => (
+          <Reveal as="dl" className="about-facts" delay={0.12}>
+            {FACTS.map(([k, v]) => (
               <div className="fact" key={k}>
-                <span className="k">{k}</span>
-                <span className="v">{v}</span>
+                <dt className="k">{k}</dt>
+                <dd className="v">{v}</dd>
               </div>
             ))}
           </Reveal>

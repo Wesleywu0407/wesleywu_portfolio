@@ -39,24 +39,41 @@ export function getZone(scrollY, thresholds) {
   return ZONE.CONTACT
 }
 
-export function getStation(zone, { rail, contactExit = 0 }) {
+// Stations are the character's parking spots per section. Everything except the
+// hero sits on a side rail, outside the reserved text column (see the
+// `padding-inline` safe zones on #work / #about / #journey in index.css).
+// `compact` covers roughly 900–1024px, where the reserved column is narrower
+// and the character has to shrink to stay clear of the copy.
+export function getStation(zone, { rail, contactExit = 0, compact = false }) {
+  const shrink = compact ? 0.78 : 1
+  const push = compact ? 1.08 : 1
+
   switch (zone) {
     case ZONE.WORK:
-      return { x: rail, y: 0.22, scale: 0.53, rotationY: -0.66 }
+      return { x: rail * push, y: 0.22, scale: 0.53 * shrink, rotationY: -0.66 }
     case ZONE.ABOUT:
-      return { x: rail, y: 0.2, scale: 0.5, rotationY: -0.66 }
+      // Pushed farther right and scaled down: the About lead and facts run wide.
+      return { x: rail * 1.06 * push, y: 0.2, scale: 0.44 * shrink, rotationY: -0.66 }
     case ZONE.JOURNEY:
-      return { x: -rail, y: 0.2, scale: 0.47, rotationY: 0.66 }
+      // Left rail, clear of the two-column timeline.
+      return { x: -rail * 1.04 * push, y: 0.2, scale: 0.42 * shrink, rotationY: 0.66 }
     case ZONE.CONTACT:
       return {
-        x: rail * 0.95,
+        x: rail * 0.98 * push,
         y: 0.16,
-        scale: 0.62 * (1 - contactExit),
+        scale: 0.58 * shrink * (1 - contactExit),
         rotationY: -0.66,
       }
     default:
       return { x: 0, y: 0, scale: 1, rotationY: 0 }
   }
+}
+
+// Phone hero: the figure drops to the lower third and shrinks so the top of the
+// screen stays clear for the role, summary and actions. It ends up standing
+// behind the WESLEY WU wordmark, which is the same idea as the desktop hero.
+export function getNarrowHeroStation() {
+  return { x: 0, y: -0.12, scale: 0.62, rotationY: 0 }
 }
 
 export function getTravelDuration(fromZone, toZone) {

@@ -1,20 +1,25 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
+import { PROFILE } from '../data.js'
 
+// The bar tracks real signals (fonts, window load) rather than a fake counter,
+// so it never claims progress the browser has not actually made.
 export default function Preloader() {
-  const [count, setCount] = useState(0)
+  const [steps, setSteps] = useState(1)
 
   useEffect(() => {
-    const start = performance.now()
-    let raf
-    const tick = (now) => {
-      const p = Math.min(1, (now - start) / 1400)
-      // ease so the counter rushes early then settles
-      setCount(Math.round(100 * (1 - Math.pow(1 - p, 3))))
-      if (p < 1) raf = requestAnimationFrame(tick)
+    let alive = true
+    const advance = () => alive && setSteps((s) => Math.min(3, s + 1))
+
+    document.fonts?.ready.then(advance) ?? advance()
+
+    if (document.readyState === 'complete') advance()
+    else window.addEventListener('load', advance, { once: true })
+
+    return () => {
+      alive = false
+      window.removeEventListener('load', advance)
     }
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
   }, [])
 
   return (
@@ -32,7 +37,12 @@ export default function Preloader() {
           Wesley&nbsp;Wu
         </motion.div>
       </div>
-      <div className="pct">{String(count).padStart(3, '0')}%</div>
+      <div className="pre-foot">
+        <span className="pre-role">{PROFILE.roleTitle}</span>
+        <span className="pre-bar" aria-hidden="true">
+          <span style={{ transform: `scaleX(${steps / 3})` }} />
+        </span>
+      </div>
     </motion.div>
   )
 }

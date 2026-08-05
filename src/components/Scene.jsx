@@ -1,10 +1,11 @@
-import { Suspense, useEffect, useMemo, useRef } from 'react'
+import { Component, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Environment, Lightformer, useAnimations, useGLTF } from '@react-three/drei'
 import { Color, LoopOnce, LoopRepeat, MeshPhysicalMaterial } from 'three'
 import {
   ZONE,
   clamp01,
+  getNarrowHeroStation,
   getStation,
   getThresholds,
   getTravelAction,
@@ -234,6 +235,7 @@ function Human({ story }) {
     const viewportHeight = current.viewportHeight || state.size.height
     const viewportWidth = current.viewportWidth || state.size.width
     const narrow = viewportWidth < 900
+    const compact = viewportWidth < 1024
     const aspect = viewportWidth / Math.max(1, viewportHeight)
     const rail = Math.min(1.38, Math.max(0.92, aspect * 0.78))
     const thresholds = getThresholds(current.sections, viewportHeight)
@@ -247,15 +249,18 @@ function Human({ story }) {
     const station = getStation(zone, {
       rail,
       contactExit,
+      compact,
     })
 
     if (narrow) {
       const heroEnd = current.sections.hero?.bottom ?? viewportHeight
       const progress = clamp01(current.scrollY / Math.max(1, heroEnd * 0.72))
-      const exit = smoothstep(0.55, 0.9, progress)
-      const mobileStation = getStation(ZONE.HERO, { rail })
-      mobileStation.y = progress * 0.12
-      mobileStation.scale = (1 - progress * 0.12) * (1 - exit)
+      // Clears out early so it is already gone by the time the facts below the
+      // hero stage scroll into view.
+      const exit = smoothstep(0.25, 0.6, progress)
+      const mobileStation = getNarrowHeroStation()
+      mobileStation.y += progress * 0.12
+      mobileStation.scale *= (1 - progress * 0.12) * (1 - exit)
 
       group.current.position.set(mobileStation.x, mobileStation.y, 0)
       group.current.scale.setScalar(mobileStation.scale)
@@ -407,16 +412,64 @@ function Human({ story }) {
   )
 }
 
+// The portfolio must read perfectly without the character. If the GLB fails to
+// download, or the GPU rejects the context, this swallows the error and the
+// layer simply renders nothing.
+class SceneBoundary extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { failed: false }
+  }
+
+  static getDerivedStateFromError() {
+    return { failed: true }
+  }
+
+  componentDidCatch(error) {
+    if (import.meta.env.DEV) console.warn('Character scene disabled:', error)
+  }
+
+  render() {
+    return this.state.failed ? null : this.props.children
+  }
+}
+
+function hasWebGL() {
+  if (typeof document === 'undefined') return false
+  try {
+    const canvas = document.createElement('canvas')
+    return Boolean(canvas.getContext('webgl2') || canvas.getContext('webgl'))
+  } catch {
+    return false
+  }
+}
+
 export default function CharacterGuide() {
   const layerRef = useRef()
   const story = useCharacterStory(layerRef)
+  const [supported] = useState(hasWebGL)
+  // Starts true on purpose: some embedded/restored tabs report `hidden` at load
+  // even though they are on screen, and `frameloop: never` would skip the first
+  // render entirely. Browsers already throttle rAF in a genuinely hidden tab, so
+  // this only ever pauses on a real visibility change.
+  const [active, setActive] = useState(true)
+
+  useEffect(() => {
+    const sync = () => setActive(!document.hidden)
+    document.addEventListener('visibilitychange', sync)
+    return () => document.removeEventListener('visibilitychange', sync)
+  }, [])
+
+  if (!supported) return null
 
   return (
     <div className="character-layer" ref={layerRef} aria-hidden="true">
+      <SceneBoundary>
       <Canvas
-        dpr={[1, 1.75]}
+        frameloop={active ? 'always' : 'never'}
+        dpr={[1, 1.5]}
         camera={{ position: [0, 1.05, 3.4], fov: 34 }}
-        gl={{ antialias: true, alpha: true }}
+        gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
         style={{ pointerEvents: 'none' }}
         eventSource={typeof document !== 'undefined' ? document.body : undefined}
         eventPrefix="client"
@@ -437,6 +490,7 @@ export default function CharacterGuide() {
           <Human story={story} />
         </Suspense>
       </Canvas>
+      </SceneBoundary>
     </div>
   )
 }
