@@ -849,10 +849,13 @@ section { position: relative; }
   background: var(--muted);
 }
 
+/* Capped near the text measure. Left to fill the column a single photo comes
+   out wider than every other element on the page and overpowers the copy. */
 .p-gallery {
   margin-top: 24px;
+  max-width: 820px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: clamp(16px, 2.4vw, 30px);
 }
 .p-gallery figure { border: 1px solid var(--line); background: var(--paper-2); }
