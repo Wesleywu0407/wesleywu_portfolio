@@ -118,7 +118,7 @@ export default function Hero({ ready }) {
             Scroll
           </span>
           <span className="label">{PROFILE.roleTitle}</span>
-          <span className="scroll-hint">Scroll — follow the mercury guide</span>
+          <span className="scroll-hint">Scroll — follow the guide</span>
         </motion.div>
       </div>
 

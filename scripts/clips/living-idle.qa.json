@@ -1,0 +1,275 @@
+{
+  "source": "/Users/wumingjuan/Desktop/profile/scripts/clips/living-idle-v2.mp4",
+  "stream": {
+    "width": 720,
+    "height": 1280,
+    "avg_frame_rate": "24/1",
+    "duration": "4.041667",
+    "nb_frames": "97"
+  },
+  "samples": 16,
+  "raw_scale_range_percent": 0.17,
+  "raw_floor_range_px": 0,
+  "raw_head_x_range_px": 19.32,
+  "raw_head_y_range_px": 4.3,
+  "cropped_sample_count": 0,
+  "frames": [
+    {
+      "box": [
+        201,
+        76,
+        560,
+        1240
+      ],
+      "width": 360,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        378.78,
+        119.9
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        76,
+        560,
+        1240
+      ],
+      "width": 360,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        378.99,
+        119.77
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        76,
+        560,
+        1240
+      ],
+      "width": 360,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        378.96,
+        119.41
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        76,
+        560,
+        1240
+      ],
+      "width": 360,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        379.86,
+        119.62
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        76,
+        561,
+        1240
+      ],
+      "width": 361,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        381.21,
+        119.67
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        75,
+        562,
+        1240
+      ],
+      "width": 362,
+      "height": 1166,
+      "floor_y": 1240,
+      "head": [
+        383.66,
+        119.53
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        75,
+        565,
+        1240
+      ],
+      "width": 365,
+      "height": 1166,
+      "floor_y": 1240,
+      "head": [
+        387.29,
+        119.09
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        75,
+        568,
+        1240
+      ],
+      "width": 368,
+      "height": 1166,
+      "floor_y": 1240,
+      "head": [
+        391.05,
+        118.71
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        75,
+        574,
+        1240
+      ],
+      "width": 374,
+      "height": 1166,
+      "floor_y": 1240,
+      "head": [
+        395.43,
+        119.61
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        76,
+        582,
+        1240
+      ],
+      "width": 382,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        398.1,
+        121.85
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        77,
+        584,
+        1240
+      ],
+      "width": 384,
+      "height": 1164,
+      "floor_y": 1240,
+      "head": [
+        397.92,
+        123.01
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        76,
+        577,
+        1240
+      ],
+      "width": 377,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        392.87,
+        121.73
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        76,
+        567,
+        1240
+      ],
+      "width": 367,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        385.17,
+        120.58
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        76,
+        563,
+        1240
+      ],
+      "width": 363,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        381.46,
+        120.13
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        76,
+        560,
+        1240
+      ],
+      "width": 360,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        379.65,
+        120.07
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        76,
+        560,
+        1240
+      ],
+      "width": 360,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        379.22,
+        119.76
+      ],
+      "touches_edge": false
+    }
+  ],
+  "contact_sheet": "/Users/wumingjuan/Desktop/profile/scripts/clips/living-idle-v2.contact.png"
+}

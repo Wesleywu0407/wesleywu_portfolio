@@ -1,0 +1,275 @@
+{
+  "source": "/Users/wumingjuan/Desktop/profile/scripts/clips/walk-to-front-settle.mp4",
+  "stream": {
+    "width": 720,
+    "height": 1280,
+    "avg_frame_rate": "24/1",
+    "duration": "4.041667",
+    "nb_frames": "97"
+  },
+  "samples": 16,
+  "raw_scale_range_percent": 1.11,
+  "raw_floor_range_px": 11,
+  "raw_head_x_range_px": 51.2,
+  "raw_head_y_range_px": 17.84,
+  "cropped_sample_count": 0,
+  "frames": [
+    {
+      "box": [
+        82,
+        65,
+        658,
+        1233
+      ],
+      "width": 577,
+      "height": 1169,
+      "floor_y": 1233,
+      "head": [
+        385.73,
+        110.9
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        158,
+        62,
+        627,
+        1232
+      ],
+      "width": 470,
+      "height": 1171,
+      "floor_y": 1232,
+      "head": [
+        363.68,
+        106.78
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        222,
+        55,
+        506,
+        1235
+      ],
+      "width": 285,
+      "height": 1181,
+      "floor_y": 1235,
+      "head": [
+        352.63,
+        99.2
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        69,
+        64,
+        529,
+        1233
+      ],
+      "width": 461,
+      "height": 1170,
+      "floor_y": 1233,
+      "head": [
+        343.02,
+        108.42
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        114,
+        67,
+        575,
+        1234
+      ],
+      "width": 462,
+      "height": 1168,
+      "floor_y": 1234,
+      "head": [
+        334.53,
+        112.06
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        185,
+        61,
+        503,
+        1236
+      ],
+      "width": 319,
+      "height": 1176,
+      "floor_y": 1236,
+      "head": [
+        334.65,
+        107.29
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        204,
+        62,
+        478,
+        1236
+      ],
+      "width": 275,
+      "height": 1175,
+      "floor_y": 1236,
+      "head": [
+        338.8,
+        108.0
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        193,
+        65,
+        494,
+        1236
+      ],
+      "width": 302,
+      "height": 1172,
+      "floor_y": 1236,
+      "head": [
+        339.15,
+        110.8
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        199,
+        68,
+        542,
+        1241
+      ],
+      "width": 344,
+      "height": 1174,
+      "floor_y": 1241,
+      "head": [
+        336.44,
+        112.9
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        189,
+        68,
+        571,
+        1243
+      ],
+      "width": 383,
+      "height": 1176,
+      "floor_y": 1243,
+      "head": [
+        339.39,
+        112.81
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        197,
+        69,
+        585,
+        1243
+      ],
+      "width": 389,
+      "height": 1175,
+      "floor_y": 1243,
+      "head": [
+        356.4,
+        113.08
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        199,
+        70,
+        578,
+        1243
+      ],
+      "width": 380,
+      "height": 1174,
+      "floor_y": 1243,
+      "head": [
+        368.66,
+        113.98
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        199,
+        72,
+        563,
+        1243
+      ],
+      "width": 365,
+      "height": 1172,
+      "floor_y": 1243,
+      "head": [
+        376.02,
+        116.03
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        199,
+        73,
+        561,
+        1243
+      ],
+      "width": 363,
+      "height": 1171,
+      "floor_y": 1243,
+      "head": [
+        378.87,
+        117.01
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        199,
+        73,
+        562,
+        1243
+      ],
+      "width": 364,
+      "height": 1171,
+      "floor_y": 1243,
+      "head": [
+        379.5,
+        117.04
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        199,
+        73,
+        562,
+        1243
+      ],
+      "width": 364,
+      "height": 1171,
+      "floor_y": 1243,
+      "head": [
+        379.72,
+        116.93
+      ],
+      "touches_edge": false
+    }
+  ],
+  "contact_sheet": "/Users/wumingjuan/Desktop/profile/scripts/clips/walk-to-front-settle.contact.png"
+}

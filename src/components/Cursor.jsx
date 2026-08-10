@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, useMotionValue, useSpring } from 'framer-motion'
 
 // Blend-mode cursor: a dot glued to the pointer + a lazy ring behind it.
@@ -8,6 +8,7 @@ export default function Cursor() {
   const [enabled, setEnabled] = useState(false)
   const [hint, setHint] = useState('')
   const [visible, setVisible] = useState(false)
+  const hideTimer = useRef(0)
 
   const x = useMotionValue(-100)
   const y = useMotionValue(-100)
@@ -29,14 +30,20 @@ export default function Cursor() {
       x.set(e.clientX)
       y.set(e.clientY)
       setVisible(true)
+      window.clearTimeout(hideTimer.current)
+      hideTimer.current = window.setTimeout(() => setVisible(false), 1100)
       const target = e.target.closest?.('[data-cursor]')
       setHint(target ? target.dataset.cursor : '')
     }
-    const leave = () => setVisible(false)
+    const leave = () => {
+      window.clearTimeout(hideTimer.current)
+      setVisible(false)
+    }
 
     window.addEventListener('mousemove', move, { passive: true })
     document.documentElement.addEventListener('mouseleave', leave)
     return () => {
+      window.clearTimeout(hideTimer.current)
       window.removeEventListener('mousemove', move)
       document.documentElement.removeEventListener('mouseleave', leave)
     }

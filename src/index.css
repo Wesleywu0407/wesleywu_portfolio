@@ -325,6 +325,75 @@ img { max-width: 100%; display: block; }
   transition: opacity 0.35s var(--ease-out);
 }
 .character-layer canvas { touch-action: pan-y; }
+
+/* ---- illustrated character ---- */
+.character2d {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+  transition: opacity 0.35s var(--ease-out);
+}
+/* Anchored to the floor and to the horizontal centre, so every station is
+   expressed as an offset from the middle of the viewport and the figure always
+   stands ON the baseline rather than floating against it. The aspect ratio is
+   the plate's own, which gives the box a definite width for the pupils to be
+   positioned against as a percentage. */
+.character2d-figure {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  height: 76vh;
+  aspect-ratio: 848 / 1264;
+  transform: translate(-50%, 0);
+  will-change: transform;
+}
+/* One wrapper per sprite sheet. Each sheet has its own cell aspect ratio (the
+   walk pose is wider than the idle), so they are sized independently and both
+   centred on the figure's axis rather than sharing one box. */
+.character2d-wrap {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  height: 100%;
+  transform: translateX(-50%);
+  transform-origin: 50% 50%;
+  will-change: opacity, transform;
+}
+.character2d-sprite {
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+  image-rendering: auto;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+.character2d-pupil {
+  position: absolute;
+  z-index: 2;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #16161a;
+  transform: translate(-50%, -50%);
+  will-change: transform;
+}
+.character2d-lid {
+  position: absolute;
+  z-index: 3;
+  height: 1.35%;
+  border-radius: 55% 55% 45% 45%;
+  border-bottom: 1px solid #563b32;
+  background: #d7a17d;
+  transform: translate(-50%, -50%) scaleY(0);
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .character2d,
+  .character2d-figure,
+  .character2d-wrap { transition: none; }
+}
 /* Left column: who I am. Right column: the facts. The centre stays empty so
    the character never lands on the role, the summary or the actions. */
 .hero-intro {

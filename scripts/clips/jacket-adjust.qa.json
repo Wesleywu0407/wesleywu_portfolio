@@ -1,0 +1,275 @@
+{
+  "source": "/Users/wumingjuan/Desktop/profile/scripts/clips/jacket-adjust.mp4",
+  "stream": {
+    "width": 720,
+    "height": 1280,
+    "avg_frame_rate": "24/1",
+    "duration": "4.041667",
+    "nb_frames": "97"
+  },
+  "samples": 16,
+  "raw_scale_range_percent": 0.34,
+  "raw_floor_range_px": 0,
+  "raw_head_x_range_px": 21.02,
+  "raw_head_y_range_px": 15.78,
+  "cropped_sample_count": 0,
+  "frames": [
+    {
+      "box": [
+        200,
+        76,
+        561,
+        1240
+      ],
+      "width": 362,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        379.72,
+        119.74
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        200,
+        76,
+        563,
+        1240
+      ],
+      "width": 364,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        378.07,
+        120.55
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        188,
+        76,
+        565,
+        1240
+      ],
+      "width": 378,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        375.71,
+        122.54
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        184,
+        78,
+        565,
+        1240
+      ],
+      "width": 382,
+      "height": 1163,
+      "floor_y": 1240,
+      "head": [
+        365.03,
+        130.08
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        185,
+        79,
+        565,
+        1240
+      ],
+      "width": 381,
+      "height": 1162,
+      "floor_y": 1240,
+      "head": [
+        361.44,
+        133.17
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        183,
+        80,
+        565,
+        1240
+      ],
+      "width": 383,
+      "height": 1161,
+      "floor_y": 1240,
+      "head": [
+        359.06,
+        134.87
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        181,
+        80,
+        565,
+        1240
+      ],
+      "width": 385,
+      "height": 1161,
+      "floor_y": 1240,
+      "head": [
+        359.41,
+        135.17
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        181,
+        80,
+        565,
+        1240
+      ],
+      "width": 385,
+      "height": 1161,
+      "floor_y": 1240,
+      "head": [
+        359.55,
+        135.01
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        185,
+        79,
+        565,
+        1240
+      ],
+      "width": 381,
+      "height": 1162,
+      "floor_y": 1240,
+      "head": [
+        359.8,
+        134.25
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        188,
+        78,
+        565,
+        1240
+      ],
+      "width": 378,
+      "height": 1163,
+      "floor_y": 1240,
+      "head": [
+        363.75,
+        130.83
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        191,
+        78,
+        565,
+        1240
+      ],
+      "width": 375,
+      "height": 1163,
+      "floor_y": 1240,
+      "head": [
+        369.58,
+        127.29
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        187,
+        76,
+        565,
+        1240
+      ],
+      "width": 379,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        378.54,
+        121.82
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        188,
+        76,
+        565,
+        1240
+      ],
+      "width": 378,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        380.04,
+        120.52
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        200,
+        76,
+        563,
+        1240
+      ],
+      "width": 364,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        379.94,
+        119.76
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        200,
+        76,
+        562,
+        1240
+      ],
+      "width": 363,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        380.08,
+        119.59
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        200,
+        76,
+        561,
+        1240
+      ],
+      "width": 362,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        379.69,
+        119.39
+      ],
+      "touches_edge": false
+    }
+  ],
+  "contact_sheet": "/Users/wumingjuan/Desktop/profile/scripts/clips/jacket-adjust.contact.png"
+}

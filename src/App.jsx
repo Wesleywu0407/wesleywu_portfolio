@@ -3,7 +3,7 @@ import { AnimatePresence } from 'framer-motion'
 import Cursor from './components/Cursor.jsx'
 import Preloader from './components/Preloader.jsx'
 import Nav from './components/Nav.jsx'
-import CharacterGuide from './components/Scene.jsx'
+import Character2D from './components/Character2D.jsx'
 import Hero from './components/Hero.jsx'
 import Marquee from './components/Marquee.jsx'
 import Work from './components/Work.jsx'
@@ -117,8 +117,10 @@ export default function App() {
       <Cursor />
       <div className="grain" aria-hidden="true" />
       {/* The character's whole story is keyed to the home page's sections, so
-          it stays on the home page rather than misbehaving on a case study. */}
-      {!onProject && <CharacterGuide />}
+          it stays on the home page rather than misbehaving on a case study.
+          The 3D figure it replaced is still in Scene.jsx, unmounted — see
+          CharacterGuide there if that route is ever picked back up. */}
+      {!onProject && <Character2D />}
       <Nav />
       <main id="main">
         {onProject ? (

@@ -1,7 +1,18 @@
 import { Component, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Environment, Lightformer, useAnimations, useGLTF } from '@react-three/drei'
-import { Color, LoopOnce, LoopRepeat, MeshPhysicalMaterial } from 'three'
+import { useAnimations, useGLTF } from '@react-three/drei'
+import {
+  BackSide,
+  Color,
+  Euler,
+  Group,
+  LoopOnce,
+  LoopRepeat,
+  MeshBasicMaterial,
+  Quaternion,
+  SkinnedMesh,
+  Vector3,
+} from 'three'
 import {
   ZONE,
   clamp01,
@@ -12,9 +23,16 @@ import {
   getTravelDuration,
   getTravelPose,
   getZone,
-  mix,
   smoothstep,
 } from './characterMotion.js'
+import { createSuitMaterial, createToonRamp } from './characterSuit.js'
+import {
+  EYE_PITCH_LIMIT,
+  EYE_YAW_LIMIT,
+  createCap,
+  createEyeRig,
+} from './characterFace.js'
+import { clampAngle, createGazeState, readGaze, updateGaze } from './characterGaze.js'
 
 const MODEL_URL =
   'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/models/gltf/Xbot.glb'
@@ -25,6 +43,67 @@ const ACTION_SPEED = {
   run: 0.88,
   agree: 0.8,
   headShake: 0.78,
+}
+
+// Inverted hull: a back-faced copy of the body pushed out along the raw vertex
+// normal. The push happens on `normal` (object space, before <skinning_vertex>)
+// so the offset is skinned with the pose instead of on top of it.
+function createOutlineMaterial(thickness) {
+  const material = new MeshBasicMaterial({ color: new Color('#0e0e0c'), side: BackSide })
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.outlineThickness = { value: thickness }
+    shader.vertexShader = `uniform float outlineThickness;\n${shader.vertexShader}`.replace(
+      '#include <begin_vertex>',
+      '#include <begin_vertex>\n\ttransformed += normal * outlineThickness;',
+    )
+  }
+  return material
+}
+
+const scratch = {
+  ray: new Vector3(),
+  head: new Vector3(),
+  target: new Vector3(),
+  euler: new Euler(),
+  offset: new Quaternion(),
+}
+
+const TWO_PI = Math.PI * 2
+
+/* Shortest signed angle, so a body turned to face left doesn't make the head
+ * take the long way round. */
+function wrapAngle(angle) {
+  const wrapped = (angle + Math.PI) % TWO_PI
+  return (wrapped < 0 ? wrapped + TWO_PI : wrapped) - Math.PI
+}
+
+/* Lay a rotation on top of whatever the animation put on a bone.
+ *
+ * Which correction is right depends on something we cannot know up front: the
+ * mixer overwrites a bone's quaternion only while some clip animates it. If it
+ * did, the pose is already fresh and ours must simply be composed onto it; if it
+ * did not, last frame's offset is still sitting there and would compound every
+ * frame into a spin. Comparing against the exact value we left behind tells the
+ * two cases apart — nothing else writes these bones, so an untouched bone is
+ * bit-identical to what we stored.
+ */
+function addBoneOffset(bone, store, x, y) {
+  if (!store.clean) {
+    store.clean = new Quaternion()
+    store.left = new Quaternion()
+    store.primed = false
+  }
+
+  if (store.primed && bone.quaternion.equals(store.left)) {
+    bone.quaternion.copy(store.clean) // untouched by the mixer: undo ourselves
+  }
+  store.clean.copy(bone.quaternion)
+
+  scratch.euler.set(x, y, 0, 'XYZ')
+  bone.quaternion.multiply(scratch.offset.setFromEuler(scratch.euler))
+
+  store.left.copy(bone.quaternion)
+  store.primed = true
 }
 
 function CameraRig() {
@@ -48,6 +127,8 @@ function useCharacterStory(layerRef) {
     viewportWidth: 1,
     sections: {},
     reducedMotion: false,
+    pointerInside: false,
+    pointerAt: 0,
     zone: null,
     transitionId: 0,
     transitionFrom: null,
@@ -113,6 +194,18 @@ function useCharacterStory(layerRef) {
       story.current.reducedMotion = media.matches
     }
 
+    // The character only tracks a pointer that is actually present and moving.
+    // R3F leaves `state.pointer` frozen at its last value when the mouse leaves
+    // the window, and a figure locked onto a cursor that is no longer there is
+    // the exact thing that makes an avatar feel dead rather than attentive.
+    const onPointerMove = () => {
+      story.current.pointerAt = performance.now()
+      story.current.pointerInside = true
+    }
+    const onPointerLeave = () => {
+      story.current.pointerInside = false
+    }
+
     measure()
     update()
     document.fonts?.ready.then(() => {
@@ -128,6 +221,9 @@ function useCharacterStory(layerRef) {
     window.addEventListener('scroll', queueUpdate, { passive: true })
     window.addEventListener('resize', measure)
     media.addEventListener('change', onMotionPreference)
+    window.addEventListener('pointermove', onPointerMove, { passive: true })
+    document.addEventListener('pointerleave', onPointerLeave)
+    window.addEventListener('blur', onPointerLeave)
 
     return () => {
       cancelAnimationFrame(frame)
@@ -135,6 +231,9 @@ function useCharacterStory(layerRef) {
       window.removeEventListener('scroll', queueUpdate)
       window.removeEventListener('resize', measure)
       media.removeEventListener('change', onMotionPreference)
+      window.removeEventListener('pointermove', onPointerMove)
+      document.removeEventListener('pointerleave', onPointerLeave)
+      window.removeEventListener('blur', onPointerLeave)
     }
   }, [layerRef])
 
@@ -145,10 +244,14 @@ function Human({ story }) {
   const group = useRef()
   const body = useRef()
   const head = useRef()
+  const chest = useRef()
+  const face = useRef(null)
   const initialized = useRef(false)
   const materialStage = useRef(0)
   const travel = useRef({ id: 0, active: false })
-  const headTracking = useRef({ yaw: 0, pitch: 0, appliedYaw: 0, appliedPitch: 0 })
+  const gaze = useRef(createGazeState())
+  // One offset store per bone we lay a rotation onto — see addBoneOffset.
+  const applied = useRef({ head: {}, chest: {} })
   const actionState = useRef({
     name: null,
     gestureEnd: 0,
@@ -158,23 +261,20 @@ function Human({ story }) {
 
   const { scene, animations } = useGLTF(MODEL_URL)
   const { actions } = useAnimations(animations, scene)
-  const chromeDay = useMemo(() => new Color('#b9c7dc'), [])
-  const chromeNight = useMemo(() => new Color('#e0ecff'), [])
-  const mercury = useMemo(
-    () =>
-      new MeshPhysicalMaterial({
-        color: chromeDay.clone(),
-        metalness: 1,
-        roughness: 0.12,
-        clearcoat: 1,
-        clearcoatRoughness: 0.08,
-        envMapIntensity: 2.8,
-        iridescence: 0.72,
-        iridescenceIOR: 1.45,
-        iridescenceThicknessRange: [120, 460],
-      }),
-    [chromeDay],
-  )
+
+  // Paper sections: light figure, ink line. Inverted sections: the panel flips
+  // and the line carries the drawing instead of the fill.
+  const skinDay = useMemo(() => new Color('#f2f1ec'), [])
+  const skinNight = useMemo(() => new Color('#d8d7d0'), [])
+  const clothDay = useMemo(() => new Color('#3a3a40'), [])
+  const clothNight = useMemo(() => new Color('#26262b'), [])
+  const lineDay = useMemo(() => new Color('#0e0e0c'), [])
+  const lineNight = useMemo(() => new Color('#f2f1ec'), [])
+
+  const ramp = useMemo(createToonRamp, [])
+  const suit = useMemo(() => createSuitMaterial(ramp), [ramp])
+  const cel = suit.material
+  const outline = useMemo(() => createOutlineMaterial(0.014), [])
 
   useEffect(() => {
     const names = ['idle', 'walk', 'run', 'agree', 'headShake']
@@ -192,23 +292,126 @@ function Human({ story }) {
       actionState.current.nextGestureAt = 6
     }
 
+    const hulls = []
     scene.traverse((object) => {
-      if (!object.isMesh) return
-      object.castShadow = true
-      object.receiveShadow = true
+      if (!object.isMesh || object.userData.isOutlineHull) return
       object.frustumCulled = false
-      object.material = mercury
-    })
+      object.material = cel
+      if (!object.isSkinnedMesh) return
 
-    head.current = scene.getObjectByName('mixamorig:Head')
+      const hull = new SkinnedMesh(object.geometry, outline)
+      hull.bind(object.skeleton, object.bindMatrix)
+      hull.userData.isOutlineHull = true
+      hull.frustumCulled = false
+      hull.renderOrder = -1
+      hulls.push([object, hull])
+    })
+    // Added after the traversal so the new meshes are never walked themselves.
+    hulls.forEach(([object, hull]) => object.add(hull))
+
+    // Bones in this GLB are named without the colon Mixamo normally uses
+    // (`mixamorigHead`, not `mixamorig:Head`) — the colonised lookup this used
+    // to do silently returned undefined, which is why head tracking never
+    // actually moved anything.
+    head.current = scene.getObjectByName('mixamorigHead')
+    chest.current = scene.getObjectByName('mixamorigSpine2')
+
+    // A Mixamo bone's local frame is aligned to the bone, not to the model, so
+    // anything parented straight onto it inherits that rotation. Hanging a
+    // wrapper that carries the head's INVERSE bind matrix cancels it exactly:
+    // inside the wrapper, coordinates are plain model-space bind coordinates —
+    // the ones the face and cap were measured in — and the whole thing still
+    // rides the head through every animation.
+    const skinned = scene.getObjectByProperty('isSkinnedMesh', true)
+    const boneIndex = skinned ? skinned.skeleton.bones.indexOf(head.current) : -1
+
+    const eyes = createEyeRig()
+    const cap = createCap(outline)
+    let wrapper = null
+
+    if (head.current && boneIndex >= 0) {
+      wrapper = new Group()
+      wrapper.matrixAutoUpdate = false
+      wrapper.matrix.copy(skinned.skeleton.boneInverses[boneIndex])
+      wrapper.add(eyes.pivot)
+      wrapper.add(cap.group)
+      head.current.add(wrapper)
+    }
+    face.current = { eyes, cap }
 
     return () => {
+      if (head.current && wrapper) head.current.remove(wrapper)
+      eyes.dispose()
+      cap.dispose()
+      face.current = null
       head.current = null
+      chest.current = null
+      hulls.forEach(([object, hull]) => object.remove(hull))
       clips.forEach((clip) => clip.stop())
     }
-  }, [actions, scene, mercury])
+  }, [actions, scene, cel, outline])
 
-  useEffect(() => () => mercury.dispose(), [mercury])
+  useEffect(
+    () => () => {
+      cel.dispose()
+      outline.dispose()
+      ramp.dispose()
+    },
+    [cel, outline, ramp],
+  )
+
+  /* Aim the eyes at the actual cursor, not at a fraction of the pointer's
+   * screen coordinate. The figure spends most of the page parked off to one
+   * side and scaled down, so a straight pointer-to-angle mapping has it staring
+   * into the middle distance. Projecting the cursor onto the plane the head
+   * stands on and measuring the real angle is what makes it read as eye
+   * contact from anywhere on the page. */
+  const applyGaze = (state, delta, elapsed, current) => {
+    const rig = face.current
+    if (!rig || !head.current || !body.current) return
+
+    const camera = state.camera
+    let yaw = 0
+    let pitch = 0
+
+    const headPos = head.current.getWorldPosition(scratch.head)
+    scratch.ray.set(state.pointer.x, state.pointer.y, 0.5).unproject(camera).sub(camera.position)
+
+    if (Math.abs(scratch.ray.z) > 1e-4) {
+      const distance = (headPos.z - camera.position.z) / scratch.ray.z
+      scratch.target.copy(camera.position).addScaledVector(scratch.ray, distance)
+
+      const dx = scratch.target.x - headPos.x
+      const dy = scratch.target.y - headPos.y
+      const dz = scratch.target.z - headPos.z
+      // Measured against the way the body is currently turned, so the gaze
+      // stays on the cursor while he pivots between sections.
+      yaw = wrapAngle(Math.atan2(dx, dz) - body.current.rotation.y)
+      pitch = -Math.atan2(dy, Math.hypot(dx, dz))
+    }
+
+    const idle = performance.now() - (current.pointerAt || 0) > 4000
+    const attentive =
+      current.pointerInside && !idle && !travel.current.active && !current.reducedMotion
+
+    updateGaze(gaze.current, {
+      delta,
+      elapsed,
+      yaw: clampAngle(yaw, EYE_YAW_LIMIT),
+      pitch: clampAngle(pitch, EYE_PITCH_LIMIT),
+      attentive,
+      reducedMotion: current.reducedMotion,
+    })
+
+    const look = readGaze(gaze.current)
+    rig.eyes.aim(clampAngle(look.eyeYaw, EYE_YAW_LIMIT), clampAngle(look.eyePitch, EYE_PITCH_LIMIT))
+    rig.eyes.blink(look.blink)
+
+    addBoneOffset(head.current, applied.current.head, look.headPitch, look.headYaw)
+    if (chest.current) {
+      addBoneOffset(chest.current, applied.current.chest, 0, look.chestYaw)
+    }
+  }
 
   const switchAction = (name, fade = 0.3, once = false) => {
     const next = actions[name]
@@ -377,29 +580,15 @@ function Human({ story }) {
       }
     }
 
-    if (head.current) {
-      const tracking = headTracking.current
-      head.current.rotation.y -= tracking.appliedYaw
-      head.current.rotation.x -= tracking.appliedPitch
-
-      const attention = travel.current.active || current.reducedMotion ? 0 : 1
-      const targetYaw = state.pointer.x * 0.34 * attention
-      const targetPitch = -state.pointer.y * 0.16 * attention
-      const headFollow = 1 - Math.exp(-delta * 4.2)
-
-      tracking.yaw += (targetYaw - tracking.yaw) * headFollow
-      tracking.pitch += (targetPitch - tracking.pitch) * headFollow
-      tracking.appliedYaw = tracking.yaw
-      tracking.appliedPitch = tracking.pitch
-
-      head.current.rotation.y += tracking.appliedYaw
-      head.current.rotation.x += tracking.appliedPitch
-    }
+    applyGaze(state, delta, elapsed, current)
 
     const darkTarget = zone === ZONE.ABOUT || zone === ZONE.CONTACT ? 1 : 0
     materialStage.current += (darkTarget - materialStage.current) * (1 - Math.exp(-delta * 3.2))
-    mercury.color.copy(chromeDay).lerp(chromeNight, materialStage.current)
-    mercury.envMapIntensity = mix(2.8, 3.55, materialStage.current)
+    suit.uniforms.uSkin.value.copy(skinDay).lerp(skinNight, materialStage.current)
+    suit.uniforms.uShirt.value.copy(skinDay).lerp(skinNight, materialStage.current)
+    suit.uniforms.uCloth.value.copy(clothDay).lerp(clothNight, materialStage.current)
+    suit.uniforms.uInk.value.copy(lineDay).lerp(lineNight, materialStage.current)
+    outline.color.copy(lineDay).lerp(lineNight, materialStage.current)
     group.current.visible = group.current.scale.x > 0.012
   })
 
@@ -475,17 +664,11 @@ export default function CharacterGuide() {
         eventPrefix="client"
       >
         <CameraRig />
-        <Environment resolution={256}>
-          <Lightformer form="rect" intensity={5} color="#ffffff" scale={[8, 2, 1]} position={[0, 5, -7]} />
-          <Lightformer form="rect" intensity={4} color="#58e7ff" scale={[2, 7, 1]} position={[-5, 1, 0]} rotation-y={Math.PI / 2} />
-          <Lightformer form="rect" intensity={4.5} color="#a875ff" scale={[2, 7, 1]} position={[5, 1, 0]} rotation-y={-Math.PI / 2} />
-          <Lightformer form="ring" intensity={3.5} color="#ff6fd8" scale={3} position={[0, 1, -5]} />
-        </Environment>
-        <ambientLight intensity={0.28} />
-        <directionalLight position={[4, 7, 5]} intensity={3.6} color="#d9f4ff" />
-        <directionalLight position={[-5, 3, 1]} intensity={3.1} color="#50e6ff" />
-        <directionalLight position={[4, 2, -4]} intensity={3.5} color="#9c6cff" />
-        <directionalLight position={[0, 5, -6]} intensity={2.8} color="#ff70d7" />
+        {/* Toon shading ignores env maps, so the whole IBL rig is dead weight.
+            One key light sets where the bands break; the fill keeps the shadow
+            side on the second band instead of crushing it to black. */}
+        <ambientLight intensity={0.55} />
+        <directionalLight position={[3.5, 5, 4]} intensity={2.4} />
         <Suspense fallback={null}>
           <Human story={story} />
         </Suspense>

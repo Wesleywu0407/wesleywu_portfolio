@@ -1,0 +1,275 @@
+{
+  "source": "/Users/wumingjuan/Desktop/profile/scripts/clips/notice.mp4",
+  "stream": {
+    "width": 720,
+    "height": 1280,
+    "avg_frame_rate": "24/1",
+    "duration": "4.041667",
+    "nb_frames": "97"
+  },
+  "samples": 16,
+  "raw_scale_range_percent": 0.09,
+  "raw_floor_range_px": 0,
+  "raw_head_x_range_px": 5.25,
+  "raw_head_y_range_px": 0.38,
+  "cropped_sample_count": 0,
+  "frames": [
+    {
+      "box": [
+        201,
+        76,
+        560,
+        1240
+      ],
+      "width": 360,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        379.43,
+        119.92
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        76,
+        560,
+        1240
+      ],
+      "width": 360,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        379.41,
+        119.81
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        76,
+        560,
+        1240
+      ],
+      "width": 360,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        379.38,
+        119.72
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        76,
+        560,
+        1240
+      ],
+      "width": 360,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        379.39,
+        119.81
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        76,
+        560,
+        1240
+      ],
+      "width": 360,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        378.97,
+        119.95
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        76,
+        558,
+        1240
+      ],
+      "width": 358,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        375.81,
+        119.67
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        75,
+        557,
+        1240
+      ],
+      "width": 357,
+      "height": 1166,
+      "floor_y": 1240,
+      "head": [
+        374.58,
+        119.7
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        75,
+        557,
+        1240
+      ],
+      "width": 357,
+      "height": 1166,
+      "floor_y": 1240,
+      "head": [
+        374.47,
+        119.67
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        75,
+        557,
+        1240
+      ],
+      "width": 357,
+      "height": 1166,
+      "floor_y": 1240,
+      "head": [
+        374.47,
+        119.63
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        75,
+        557,
+        1240
+      ],
+      "width": 357,
+      "height": 1166,
+      "floor_y": 1240,
+      "head": [
+        374.22,
+        119.6
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        75,
+        557,
+        1240
+      ],
+      "width": 357,
+      "height": 1166,
+      "floor_y": 1240,
+      "head": [
+        374.18,
+        119.57
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        76,
+        558,
+        1240
+      ],
+      "width": 358,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        375.49,
+        119.65
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        76,
+        559,
+        1240
+      ],
+      "width": 359,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        377.82,
+        119.62
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        76,
+        560,
+        1240
+      ],
+      "width": 360,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        378.71,
+        119.68
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        76,
+        560,
+        1240
+      ],
+      "width": 360,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        378.69,
+        119.67
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        201,
+        76,
+        560,
+        1240
+      ],
+      "width": 360,
+      "height": 1165,
+      "floor_y": 1240,
+      "head": [
+        378.83,
+        119.57
+      ],
+      "touches_edge": false
+    }
+  ],
+  "contact_sheet": "/Users/wumingjuan/Desktop/profile/scripts/clips/notice.contact.png"
+}

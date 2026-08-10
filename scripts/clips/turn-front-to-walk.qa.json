@@ -1,0 +1,275 @@
+{
+  "source": "/Users/wumingjuan/Desktop/profile/scripts/clips/turn-front-to-walk.mp4",
+  "stream": {
+    "width": 720,
+    "height": 1280,
+    "avg_frame_rate": "24/1",
+    "duration": "4.041667",
+    "nb_frames": "97"
+  },
+  "samples": 16,
+  "raw_scale_range_percent": 2.38,
+  "raw_floor_range_px": 15,
+  "raw_head_x_range_px": 88.8,
+  "raw_head_y_range_px": 23.71,
+  "cropped_sample_count": 0,
+  "frames": [
+    {
+      "box": [
+        200,
+        74,
+        561,
+        1242
+      ],
+      "width": 362,
+      "height": 1169,
+      "floor_y": 1242,
+      "head": [
+        379.37,
+        117.98
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        200,
+        74,
+        561,
+        1242
+      ],
+      "width": 362,
+      "height": 1169,
+      "floor_y": 1242,
+      "head": [
+        379.15,
+        118.12
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        200,
+        73,
+        562,
+        1242
+      ],
+      "width": 363,
+      "height": 1170,
+      "floor_y": 1242,
+      "head": [
+        379.48,
+        118.37
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        200,
+        72,
+        568,
+        1242
+      ],
+      "width": 369,
+      "height": 1171,
+      "floor_y": 1242,
+      "head": [
+        385.31,
+        117.93
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        200,
+        70,
+        589,
+        1242
+      ],
+      "width": 390,
+      "height": 1173,
+      "floor_y": 1242,
+      "head": [
+        404.39,
+        115.71
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        199,
+        69,
+        612,
+        1242
+      ],
+      "width": 414,
+      "height": 1174,
+      "floor_y": 1242,
+      "head": [
+        421.44,
+        116.53
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        211,
+        67,
+        632,
+        1242
+      ],
+      "width": 422,
+      "height": 1176,
+      "floor_y": 1242,
+      "head": [
+        430.27,
+        114.98
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        191,
+        65,
+        640,
+        1242
+      ],
+      "width": 450,
+      "height": 1178,
+      "floor_y": 1242,
+      "head": [
+        418.61,
+        113.06
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        144,
+        67,
+        644,
+        1241
+      ],
+      "width": 501,
+      "height": 1175,
+      "floor_y": 1241,
+      "head": [
+        380.87,
+        114.69
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        164,
+        65,
+        637,
+        1240
+      ],
+      "width": 474,
+      "height": 1176,
+      "floor_y": 1240,
+      "head": [
+        352.39,
+        111.02
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        193,
+        57,
+        614,
+        1239
+      ],
+      "width": 422,
+      "height": 1183,
+      "floor_y": 1239,
+      "head": [
+        341.47,
+        102.56
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        203,
+        54,
+        590,
+        1250
+      ],
+      "width": 388,
+      "height": 1197,
+      "floor_y": 1250,
+      "head": [
+        351.11,
+        99.06
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        177,
+        62,
+        577,
+        1244
+      ],
+      "width": 401,
+      "height": 1183,
+      "floor_y": 1244,
+      "head": [
+        367.48,
+        106.68
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        246,
+        57,
+        607,
+        1242
+      ],
+      "width": 362,
+      "height": 1186,
+      "floor_y": 1242,
+      "head": [
+        376.34,
+        101.49
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        243,
+        50,
+        562,
+        1239
+      ],
+      "width": 320,
+      "height": 1190,
+      "floor_y": 1239,
+      "head": [
+        388.64,
+        94.66
+      ],
+      "touches_edge": false
+    },
+    {
+      "box": [
+        137,
+        56,
+        615,
+        1235
+      ],
+      "width": 479,
+      "height": 1180,
+      "floor_y": 1235,
+      "head": [
+        390.47,
+        100.68
+      ],
+      "touches_edge": false
+    }
+  ],
+  "contact_sheet": "/Users/wumingjuan/Desktop/profile/scripts/clips/turn-front-to-walk.contact.png"
+}
