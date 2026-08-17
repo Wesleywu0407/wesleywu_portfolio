@@ -2,6 +2,19 @@ import Reveal from './Reveal.jsx'
 import { PROJECTS } from '../data.js'
 import { asset } from '../useHashRoute.js'
 
+function MixedLanguageText({ text }) {
+  const marker = '繁體中文'
+  const parts = text.split(marker)
+  if (parts.length === 1) return text
+
+  return parts.map((part, index) => (
+    <span key={`${part}-${index}`}>
+      {index > 0 && <span lang="zh-Hant">{marker}</span>}
+      {part}
+    </span>
+  ))
+}
+
 function NotFound() {
   return (
     <article className="project-page">
@@ -102,7 +115,7 @@ export default function ProjectPage({ slug }) {
             <h2 className="p-h" id="p-build">What I built</h2>
             <ul className="p-list">
               {detail.highlights.map((item) => (
-                <li key={item}>{item}</li>
+                <li key={item}><MixedLanguageText text={item} /></li>
               ))}
             </ul>
           </Reveal>

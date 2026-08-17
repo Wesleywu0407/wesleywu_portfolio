@@ -190,11 +190,45 @@ export default function Character2D() {
   const figure = useRef(null)
   const wraps = useRef({})
   const sprites = useRef({})
+  const loadedSheets = useRef(new Set(['idle']))
   const pupils = useRef([])
   const lids = useRef([])
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const pendingSheets = new Set()
+    let alive = true
+
+    const loadSheet = (name) => {
+      if (loadedSheets.current.has(name) || pendingSheets.has(name)) return
+      pendingSheets.add(name)
+
+      const image = new Image()
+      image.decoding = 'async'
+      image.onload = () => {
+        if (!alive) return
+        const sprite = sprites.current[name]
+        if (sprite) {
+          sprite.style.backgroundImage = `url(${BASE}character/${SHEETS[name].file}.png)`
+          loadedSheets.current.add(name)
+        }
+        pendingSheets.delete(name)
+      }
+      image.onerror = () => pendingSheets.delete(name)
+      image.src = `${BASE}character/${SHEETS[name].file}.png`
+    }
+
+    const loadMotionSheets = () => ['turnOut', 'walk', 'turnIn'].forEach(loadSheet)
+    const loadGestureSheets = () =>
+      ['idleLiving', 'jacketAdjust', 'notice'].forEach(loadSheet)
+
+    // The first idle pose is the only critical sprite. Movement sheets are
+    // requested after the first paint (or on deliberate interaction), while
+    // occasional life gestures wait until the initial interaction window settles.
+    const motionJob = window.setTimeout(loadMotionSheets, 1800)
+    const gestureJob = window.setTimeout(loadGestureSheets, 5000)
+    window.addEventListener('scroll', loadMotionSheets, { once: true, passive: true })
+    window.addEventListener('pointerdown', loadMotionSheets, { once: true, passive: true })
     const state = {
       progress: 0,
       x: 0,
@@ -675,8 +709,9 @@ export default function Character2D() {
       sprites.current.turnIn.style.backgroundPositionX =
         `${(turnInFrame * 100) / (SHEETS.turnIn.frames - 1)}%`
 
+      const visiblePose = loadedSheets.current.has(state.pose) ? state.pose : 'idle'
       Object.keys(SHEETS).forEach((name) => {
-        const visible = name === state.pose
+        const visible = name === visiblePose
         const directional =
           name === 'turnOut' || name === 'walk' || name === 'turnIn'
         wraps.current[name].style.opacity = visible ? '1' : '0'
@@ -713,9 +748,14 @@ export default function Character2D() {
     window.addEventListener('blur', onLeave)
 
     return () => {
+      alive = false
+      window.clearTimeout(motionJob)
+      window.clearTimeout(gestureJob)
       cancelAnimationFrame(frame)
       resizeObserver.disconnect()
       window.removeEventListener('scroll', readProgress)
+      window.removeEventListener('scroll', loadMotionSheets)
+      window.removeEventListener('pointerdown', loadMotionSheets)
       window.removeEventListener('resize', measure)
       window.removeEventListener('pointermove', onPointer)
       document.removeEventListener('pointerleave', onLeave)
@@ -744,7 +784,8 @@ export default function Character2D() {
                 sprites.current[name] = node
               }}
               style={{
-                backgroundImage: `url(${BASE}character/${sheet.file}.png)`,
+                backgroundImage:
+                  name === 'idle' ? `url(${BASE}character/${sheet.file}.png)` : 'none',
                 backgroundSize: `${sheet.frames * 100}% 100%`,
               }}
             />
