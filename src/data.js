@@ -111,6 +111,40 @@ export const PROJECTS = [
     },
   },
   {
+    slug: 'nansieng',
+    title: 'Taiwan Nan Sieng',
+    serif: 'client website',
+    desc: 'Designed and built the booking website for a professional lion-dance troupe, from the public site through to a Supabase backend and a custom CRM the client uses to work their enquiries.',
+    tags: 'Eleventy · Supabase · Edge Functions · CMS',
+    year: '2026',
+    kind: 'Freelance Client Project',
+    role: 'Freelance Developer & Designer (solo)',
+    focus: 'Turning search traffic into booking enquiries',
+    stack: 'Eleventy · Nunjucks · Supabase',
+    liveUrl: 'https://nansiengtaiwan.com/',
+    sourceUrl: 'https://github.com/Wesleywu0407/lion-dance-website',
+    status: 'Live and in use by the client',
+    gallery: [],
+    detail: {
+      overview:
+        'The official site for Taiwan Nan Sieng Dragon & Lion Dance Activity Centre, a Taipei-based troupe performing across Taiwan. It is not a brochure site — its job is to take an event organiser from search result to confirmed enquiry in as few steps as possible, and then to hand that enquiry to the troupe in a form they can actually work. I took the project on solo, from design through build, backend and deployment.',
+      problem:
+        'Most bookings start on a phone, and organisers need to answer three questions fast: is this troupe right for my event, what can they actually perform, and how do I get a date and a quote? Enquiries also arrived scattered across LINE and phone with nowhere to track them.',
+      highlights: [
+        'Public site built with Eleventy 3 and Nunjucks: home, about, services and contact pages, plus event-case galleries and dedicated search landing pages.',
+        'Entry points organised by event situation — opening ceremonies, corporate events, year-end parties, temple festivals, department stores and school programmes — so an organiser self-selects instead of reading a service list.',
+        'Supabase backend with a Postgres schema, Auth and Edge Functions covering enquiry intake, an admin API, event analytics and a notification queue with rate limiting.',
+        'Custom CRM at /crm/ where the troupe filters and opens enquiries, records follow-ups, moves status and exports to CSV.',
+        'Client edits all content and photography through Sveltia CMS without touching code; a FormSubmit path keeps the enquiry form working if the backend is ever unavailable.',
+        'Mobile-first booking flow with a persistent quick-contact bar for LINE and phone, since mobile is the primary way enquiries arrive.',
+        'Build-time image optimisation via eleventy-img and sharp, and a test pipeline running unit tests, a full build, a local link check and a backend contract check.',
+      ],
+      stackDetail:
+        'Eleventy 3 · Nunjucks · HTML · CSS · JavaScript · TypeScript · Supabase (Postgres, Auth, Edge Functions) · Sveltia CMS · Cloudflare · eleventy-img / sharp · Node.js 20',
+      note: 'Built as a freelance commission. The brand, photography and performance content belong to Taiwan Nan Sieng Dragon & Lion Dance Activity Centre.',
+    },
+  },
+  {
     slug: 'veilcore',
     title: 'Veilcore',
     serif: 'motion game',
